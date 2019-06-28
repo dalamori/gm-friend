@@ -20,8 +20,26 @@ CREATE TABLE `notes` (
     `privacy_type` VARCHAR(64) NOT NULL,
     `owner` VARCHAR(255) NOT NULL,
     PRIMARY KEY `primary` (`id`),
-    UNIQUE KEY `title_idx` (`title`),
+    UNIQUE KEY `title_unique` (`title`),
     INDEX `owner_idx` (`owner`)
 );
 
+CREATE TABLE `group_lists` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `content_type` VARCHAR(64) NOT NULL,
+    `privacy_type` VARCHAR(64) NOT NULL,
+    `owner` VARCHAR(255) NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `name_unique` (`name`),
+    INDEX `owner_idx` (`owner`)
+);
+
+CREATE TABLE `group_contents` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `group_id` INTEGER(20) NOT NULL,
+    `content_id` INTEGER(20) NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    FOREIGN KEY  (`group_id`) REFERENCES `group_lists` (`id`) ON DELETE CASCADE
+);
 
