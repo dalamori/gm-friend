@@ -1,0 +1,43 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.6.RELEASE'
+	id 'java'
+	id 'groovy'
+    id 'com.avast.gradle.docker-compose' version '0.9.4'
+	id "org.flywaydb.flyway" version "5.2.4"
+}
+
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'docker-compose'
+
+group = 'net.dalamori'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.flywaydb:flyway-core'
+	compile 'net.dv8tion:JDA:4.BETA.0_10'
+	compileOnly 'org.projectlombok:lombok'
+	compile 'mysql:mysql-connector-java'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+flyway {
+	url = 'jdbc:mysql://localhost:3306/dm_friend'
+	user = 'friend'
+	password = 'ChangeMe'
+	schemas = ['dm_friend']
+}
