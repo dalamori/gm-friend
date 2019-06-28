@@ -3,9 +3,11 @@ package net.dalamori.GMFriend.repository;
 import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.testing.IntegrationTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Category(IntegrationTest.class)
 public class PropertyDaoIntegrationTest {
 
     @Autowired
