@@ -4,6 +4,7 @@ import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.testing.IntegrationTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,10 +34,13 @@ public class GroupDaoIntegrationTest {
     public static final Long CONTENT_C = Long.valueOf(5555);
 
 
+    @After
+    public void teardown() {
+        groupDao.deleteAll();
+    }
+
     @Before
     public void setup() {
-        groupDao.deleteAll();
-
         group = new Group();
         group.setContents(new HashSet<>());
         Set<Long> contents = group.getContents();
