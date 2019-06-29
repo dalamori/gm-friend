@@ -1,5 +1,6 @@
 package net.dalamori.GMFriend.repository;
 
+import jdk.vm.ci.aarch64.AArch64;
 import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.LocationLink;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
@@ -75,13 +76,12 @@ public class LocationLinkDaoIntegrationTest {
         Assert.assertTrue("return value should be a link", result instanceof LocationLink);
         Assert.assertTrue("return value should have an Id set", result.getId() instanceof Long);
 
-        // and: I should be able to look up that item
-        Location findOrigin = locationDao.findById(savedOrigin.getId()).get();
-        Assert.assertEquals("origin should have a link", 1, findOrigin.getLinks().size());
-        Assert.assertEquals(
-                "that link should have the correct shortDesc",
-                LINK_DESC,
-                findOrigin.getLinks().toArray(new LocationLink[1])[0].getShortDescription()
-        );
+        // and: I should be able to look that item up
+        LocationLink findLink = linkDao.findById(result.getId()).get();
+        Assert.assertTrue("link can be retrieved", findLink instanceof LocationLink);
+        Assert.assertEquals("link should have the correct shortDesc", LINK_DESC, findLink.getShortDescription());
+        Assert.assertEquals("link should have the correct origin", savedOrigin, findLink.getOrigin());
+        Assert.assertEquals("link should have the correct dest", savedDest, findLink.getDestination());
+        Assert.assertEquals("link should have the correct privacy policy set", PrivacyType.NORMAL, findLink.getPrivacy());
     }
 }
