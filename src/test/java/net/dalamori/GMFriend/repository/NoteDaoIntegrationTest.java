@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.repository;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.testing.IntegrationTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,10 +32,14 @@ public class NoteDaoIntegrationTest {
     public static final String NOTE_OWNER = "Some Test Guy";
     public static final String NOTE_TITLE = "A Test Title";
 
+
+    @After
+    public void teardown() {
+        noteDao.deleteAll();
+    }
+
     @Before
     public void setup() {
-        noteDao.deleteAll();
-
         note = new Note();
         note.setTitle(NOTE_TITLE);
         note.setBody(NOTE_BODY);

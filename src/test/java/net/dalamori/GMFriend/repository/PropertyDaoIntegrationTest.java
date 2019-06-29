@@ -4,6 +4,7 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.testing.IntegrationTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,10 +28,13 @@ public class PropertyDaoIntegrationTest {
     public static final String PROPERTY_VALUE = "TestValue - Foo";
     public static final String PROPERTY_OWNER = "SomeTestGuy";
 
+    @After
+    public void teardown() {
+        propertyDao.deleteAll();
+    }
+
     @Before
     public void setUp() {
-        propertyDao.deleteAll();
-
         property = new Property();
         property.setName(PROPERTY_NAME);
         property.setValue(PROPERTY_VALUE);

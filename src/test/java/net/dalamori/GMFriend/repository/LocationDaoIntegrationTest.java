@@ -5,6 +5,7 @@ import net.dalamori.GMFriend.models.LocationLink;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.testing.IntegrationTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,12 +47,15 @@ public class LocationDaoIntegrationTest {
     public static final String OWNER = "Me";
     public static final String LINK_DESC = "downstairs";
 
-    @Before
-    public void setup() {
+    @After
+    public void teardown() {
         noteDao.deleteAll();
         linkDao.deleteAll();
         locationDao.deleteAll();
+    }
 
+    @Before
+    public void setup() {
         noteA = new Note();
         noteA.setTitle(NOTE_TITLE + " A_TITLE");
         noteA.setBody(LIPSUM);
