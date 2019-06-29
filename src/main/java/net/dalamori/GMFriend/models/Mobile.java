@@ -15,10 +15,11 @@ import javax.persistence.Transient;
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
 @Entity
-@Table(name = "CREATURES")
-public class Creature {
+@Table(name = "MOBILES")
+@Data
+public class Mobile {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "ID", nullable = false)
@@ -34,7 +35,24 @@ public class Creature {
     @Column(name = "OWNER", nullable = false)
     private String owner;
 
+    @Column(name = "CREATURE_ID")
+    private Long creatureId;
+
+    @Column(name = "MAX_HP", nullable = false)
+    private long maxHp;
+
+    @Column(name = "HP", nullable = false)
+    private long hp;
+
+    @Column(name = "INITIATIVE", nullable = false)
+    private int initiative;
+
+    @Column(name = "ALIVE", nullable = false)
+    private boolean alive;
+
+    @Column(name = "POSITION", nullable = false)
+    private String position;
+
     @Transient
     private Map<String, Property> propertyMap = new HashMap<>();
-
 }

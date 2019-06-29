@@ -65,4 +65,28 @@ CREATE TABLE `location_links` (
     FOREIGN KEY `dest_fk` (`dest`) REFERENCES `locations` (`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `creatures` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `privacy_type` VARCHAR(64) NOT NULL,
+    `owner` VARCHAR(255) NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `name_unique` (`name`),
+    INDEX `owner_idx` (`owner`)
+);
 
+CREATE TABLE `mobiles` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `privacy_type` VARCHAR(64) NOT NULL,
+    `owner` VARCHAR(255) NOT NULL,
+    `creature_id` INTEGER(20) NULL,
+    `max_hp` INTEGER(20) NOT NULL DEFAULT 1,
+    `hp` INTEGER(20) NOT NULL DEFAULT 1,
+    `initiative` INTEGER NOT NULL DEFAULT 9999,
+    `alive` BIT(1) NOT NULL DEFAULT 1,
+    `position` VARCHAR(255) NOT NULL DEFAULT "",
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `name_unique` (`name`),
+    INDEX `owner_idx` (`owner`)
+);
