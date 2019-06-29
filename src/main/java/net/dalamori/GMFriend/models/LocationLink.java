@@ -26,12 +26,12 @@ public class LocationLink {
     @Column(name = "ID", nullable = false)
     private Long id;
 
-    @ManyToOne(targetEntity = Location.class, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = Location.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "DEST")
     @JsonIgnoreProperties({"links", "notes"})
     private Location destination;
 
-    @ManyToOne(targetEntity = Location.class, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = Location.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "ORIGIN")
     @JsonIgnoreProperties({"links", "notes"})
     private Location origin;

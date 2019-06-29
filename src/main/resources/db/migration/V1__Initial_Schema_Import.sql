@@ -65,11 +65,4 @@ CREATE TABLE `location_links` (
     FOREIGN KEY `dest_fk` (`dest`) REFERENCES `locations` (`id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `location_notes` (
-    `location_id` INTEGER(20) NOT NULL,
-    `note_id` INTEGER(20) NOT NULL,
-    UNIQUE KEY `nodupes`(`location_id`, `note_id`),
-    FOREIGN KEY `location_fk` (`location_id`) REFERENCES `locations` (`id`) ON DELETE CASCADE,
-    FOREIGN KEY `note_fk` (`note_id`) REFERENCES `locations` (`id`) ON DELETE CASCADE
-);
 
