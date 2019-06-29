@@ -40,6 +40,36 @@ CREATE TABLE `group_contents` (
     `group_id` INTEGER(20) NOT NULL,
     `content_id` INTEGER(20) NOT NULL,
     PRIMARY KEY `primary` (`id`),
-    FOREIGN KEY  (`group_id`) REFERENCES `group_lists` (`id`) ON DELETE CASCADE
+    FOREIGN KEY `group_fk` (`group_id`) REFERENCES `group_lists` (`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `locations` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `privacy_type` VARCHAR(64) NOT NULL,
+    `owner` VARCHAR(255) NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `name_unique` (`name`),
+    INDEX `owner_idx` (`owner`)
+);
+
+CREATE TABLE `location_links` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `dest` INTEGER(20) NOT NULL,
+    `origin` INTEGER(20) NOT NULL,
+    `short_desc` VARCHAR(255) NOT NULL,
+    `privacy_type` VARCHAR(64) NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `nodupes_origin_dest` (`origin`, `dest`),
+    FOREIGN KEY `origin_fk` (`origin`) REFERENCES `locations` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY `dest_fk` (`dest`) REFERENCES `locations` (`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `location_notes` (
+    `location_id` INTEGER(20) NOT NULL,
+    `note_id` INTEGER(20) NOT NULL,
+    UNIQUE KEY `nodupes`(`location_id`, `note_id`),
+    FOREIGN KEY `location_fk` (`location_id`) REFERENCES `locations` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY `note_fk` (`note_id`) REFERENCES `locations` (`id`) ON DELETE CASCADE
 );
 
