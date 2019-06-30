@@ -9,6 +9,9 @@ public interface GroupService {
     Group read(Long id) throws GroupException;
     Group read(String name) throws GroupException;
 
+    boolean exists(Long id);
+    boolean exists(String name);
+
     Group update(Group group) throws GroupException;
 
     void delete(Group group) throws GroupException;

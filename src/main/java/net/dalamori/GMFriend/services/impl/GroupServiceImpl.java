@@ -3,11 +3,13 @@ package net.dalamori.GMFriend.services.impl;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.GroupException;
+import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.services.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -19,6 +21,7 @@ import java.util.Set;
 @Slf4j
 @Data
 @Service("groupService")
+@Transactional(rollbackFor = NoteException.class)
 public class GroupServiceImpl implements GroupService {
 
     @Autowired
@@ -52,7 +55,7 @@ public class GroupServiceImpl implements GroupService {
         try {
             return groupDao.save(group);
         } catch (Throwable ex) {
-            log.info("Record insert failed: {}", group, ex);
+            log.info("GroupServiceImpl::create Record insert failed: {}", group, ex);
             throw new GroupException("SQL failed to insert", ex);
         }
     }
@@ -82,6 +85,24 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    public boolean exists(Long id) {
+        if (id != null) {
+            return groupDao.existsById(id);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean exists(String name) {
+        if (name != null) {
+            return groupDao.existsByName(name);
+        }
+
+        return false;
+    }
+
+    @Override
     public Group update(Group group) throws GroupException {
         if (group.getId() == null) {
             log.debug("GroupServiceImpl::update - cannot update group with null Id");
@@ -108,7 +129,7 @@ public class GroupServiceImpl implements GroupService {
         try {
             return groupDao.save(group);
         } catch (Throwable ex) {
-            log.info("Record update failed: {}", group, ex);
+            log.info("GroupServiceImpl::update Record update failed: {}", group, ex);
             throw new GroupException("SQL failed to update", ex);
         }
     }
@@ -125,6 +146,11 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("Group not found");
         }
 
-        groupDao.deleteById(group.getId());
+        try {
+            groupDao.deleteById(group.getId());
+        } catch (Throwable ex) {
+            log.info("GroupServiceImpl::delete failed to delete {}", group, ex);
+            throw new GroupException("SQL failed to delete");
+        }
     }
 }

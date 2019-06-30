@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 
 @Data
@@ -24,16 +26,20 @@ public class Note {
     private Long id;
 
     @Lob
+    @NotBlank
     @Column(nullable = false, name = "BODY")
     private String body;
 
+    @NotBlank
     @Column(nullable = false, unique = true, name = "TITLE")
     private String title;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "PRIVACY_TYPE")
     private PrivacyType privacy;
 
+    @NotBlank
     @Column(nullable = false, name = "OWNER")
     private String owner;
 }
