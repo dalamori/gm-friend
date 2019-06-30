@@ -32,6 +32,11 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("group to create already has an ID set");
         }
 
+        if (groupDao.existsByName(group.getName())) {
+            log.debug("GroupServiceImpl::create - duplicate name");
+            throw new GroupException("group to create duplicates a name already in the DB");
+        }
+
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
 
@@ -44,7 +49,12 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("group to create failed validation");
         }
 
-        return groupDao.save(group);
+        try {
+            return groupDao.save(group);
+        } catch (Throwable ex) {
+            log.info("Record insert failed: {}", group, ex);
+            throw new GroupException("SQL failed to insert", ex);
+        }
     }
 
     @Override
@@ -95,7 +105,12 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("group to create failed validation");
         }
 
-        return groupDao.save(group);
+        try {
+            return groupDao.save(group);
+        } catch (Throwable ex) {
+            log.info("Record update failed: {}", group, ex);
+            throw new GroupException("SQL failed to update", ex);
+        }
     }
 
     @Override

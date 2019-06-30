@@ -15,6 +15,8 @@ public interface GroupDao extends CrudRepository<Group, Long> {
 
     Optional<Group> findByName(String name);
 
+    boolean existsByName(String name);
+
     List<Group> findAllByOwner(String owner);
 
 }
