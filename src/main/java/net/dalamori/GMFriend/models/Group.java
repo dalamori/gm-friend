@@ -16,6 +16,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,22 +30,27 @@ public class Group {
     @Column(name = "ID", nullable = false)
     private Long id;
 
+    @NotBlank
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
 
+    @NotNull
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "GROUP_CONTENTS", joinColumns = @JoinColumn(name = "GROUP_ID"))
     @Column(name="CONTENT_ID")
     private Set<Long> contents = new HashSet<>();
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "PRIVACY_TYPE")
     private PrivacyType privacy;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "CONTENT_TYPE")
     private PropertyType contentType;
 
+    @NotBlank
     @Column(name = "OWNER")
     private String owner;
 }
