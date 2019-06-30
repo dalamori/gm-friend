@@ -8,9 +8,14 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository("groupDao")
 public interface GroupDao extends CrudRepository<Group, Long> {
+
+    Optional<Group> findByName(String name);
+
+    boolean existsByName(String name);
 
     List<Group> findAllByOwner(String owner);
 
