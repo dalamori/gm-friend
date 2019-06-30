@@ -13,8 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -276,5 +274,44 @@ public class GroupServiceUnitTest {
 
             throw ex;
         }
+    }
+
+    @Test
+    public void groupService_delete_shouldHappyPath() throws GroupException {
+        // given: a proper saved copy appears to be in the DB:
+        Mockito.when(mockDao.existsById(GROUP_ID)).thenReturn(true);
+
+        // when: I try to delete the group
+        group.setId(GROUP_ID);
+        service.delete(group);
+
+        // then: I expect to see that call pass thru to to dao
+        Mockito.verify(mockDao).deleteById(GROUP_ID);
+    }
+
+    @Test(expected = GroupException.class)
+    public void groupService_delete_shouldFailWhenIdNotSet() throws GroupException {
+        // given: a proper saved copy appears to be in the DB:
+        Mockito.when(mockDao.existsById(GROUP_ID)).thenReturn(true);
+
+        // when: I try to delete the group
+        group.setId(null);
+        service.delete(group);
+
+        // then: I expect to get an error
+        Assert.fail("should have thrown an error for no id by now");
+    }
+
+    @Test(expected = GroupException.class)
+    public void groupService_delete_shouldFailWhenDoesntExist() throws GroupException {
+        // given: dao is set to report that group doesn't exist
+        Mockito.when(mockDao.existsById(GROUP_ID)).thenReturn(false);
+
+        // when: I try to delete the group
+        group.setId(GROUP_ID);
+        service.delete(group);
+
+        // then: I expect to see that call fail with a not found
+        Assert.fail("should have thrown a not found error by now");
     }
 }
