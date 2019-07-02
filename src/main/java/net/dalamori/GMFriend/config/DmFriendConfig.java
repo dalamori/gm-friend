@@ -29,5 +29,13 @@ public class DmFriendConfig {
     @Value("${groups.system.globalNoteAction:Global Notes}")
     private String systemGroupGlobalNoteAction;
 
+    @Value("${groups.system.globalPropertiesAction:Global Variables}")
+    private String systemGroupGlobalVarsAction;
+
+    @Value("${groups.system.creaturePropertyAction:Properties for Creature #}")
+    private String systemGroupCreaturePropertyAction;
+
+    @Value("${groups.system.mobilePropertyAction:Properties for Mobile #}")
+    private String systemGroupMobilePropertyAction;
 
 }

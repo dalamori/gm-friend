@@ -253,44 +253,13 @@ public class NoteServiceImpl implements NoteService {
                 config.getSystemGroupLocationNoteAction(),
                 location.getId());
 
-        return resolveNoteGroup(name);
+        return groupService.resolveSystemGroup(name, PropertyType.NOTE);
     }
 
     private Group resolveGlobalNoteGroup() throws GroupException {
         String name = config.getSystemGroupPrefix().concat(config.getSystemGroupGlobalNoteAction());
-        return resolveNoteGroup(name);
+        return groupService.resolveSystemGroup(name, PropertyType.NOTE);
     }
 
-    public Group resolveNoteGroup(String name) throws GroupException {
-        Group group;
 
-        if (groupService.exists(name)) {
-            group = groupService.read(name);
-
-            // check type before returning
-            if (group.getContentType() == PropertyType.NOTE) {
-                return group;
-            }
-
-            // try to flag collision and recover, but if errors occur then they occur...
-            log.warn("NoteServiceImpl::resolveLocationNoteGroup collision detected on {}.", name);
-            group.setName(config.getSystemGroupCollisionPrefix().concat(name));
-            group.setPrivacy(PrivacyType.PUBLIC);
-
-            if (groupService.exists(group.getName())) {
-                log.error("NoteServiceImpl::resolveLocationNoteGroup - overwriting collision Backup for {}", name);
-                groupService.delete(groupService.read(group.getName()));
-            }
-
-            groupService.update(group);
-        }
-
-        group = new Group();
-        group.setPrivacy(PrivacyType.INTERNAL);
-        group.setName(name);
-        group.setOwner(config.getSystemGroupOwner());
-        group.setContentType(PropertyType.NOTE);
-
-        return groupService.create(group);
-    }
 }

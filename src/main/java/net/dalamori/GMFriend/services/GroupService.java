@@ -2,6 +2,7 @@ package net.dalamori.GMFriend.services;
 
 import net.dalamori.GMFriend.exceptions.GroupException;
 import net.dalamori.GMFriend.models.Group;
+import net.dalamori.GMFriend.models.enums.PropertyType;
 
 public interface GroupService {
     Group create(Group group) throws GroupException;
@@ -16,4 +17,5 @@ public interface GroupService {
 
     void delete(Group group) throws GroupException;
 
+    Group resolveSystemGroup(String name, PropertyType groupType) throws GroupException;
 }

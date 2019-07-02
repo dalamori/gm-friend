@@ -2,9 +2,12 @@ package net.dalamori.GMFriend.services.impl;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.GroupException;
 import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.models.Group;
+import net.dalamori.GMFriend.models.enums.PrivacyType;
+import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.services.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,9 @@ import java.util.Set;
 @Service("groupService")
 @Transactional(rollbackFor = NoteException.class)
 public class GroupServiceImpl implements GroupService {
+
+    @Autowired
+    private DmFriendConfig config;
 
     @Autowired
     private GroupDao groupDao;
@@ -152,5 +158,39 @@ public class GroupServiceImpl implements GroupService {
             log.info("GroupServiceImpl::delete failed to delete {}", group, ex);
             throw new GroupException("SQL failed to delete");
         }
+    }
+
+    @Override
+    public Group resolveSystemGroup(String name, PropertyType groupType) throws GroupException {
+        Group group;
+
+        if (groupDao.existsByName(name)) {
+            group = groupDao.findByName(name).get();
+
+            // check type before returning
+            if (group.getContentType() == groupType) {
+                return group;
+            }
+
+            // try to flag collision and recover, but if errors occur then they occur...
+            log.warn("NoteServiceImpl::resolveLocationNoteGroup collision detected on {}.", name);
+            group.setName(config.getSystemGroupCollisionPrefix().concat(name));
+            group.setPrivacy(PrivacyType.PUBLIC);
+
+            if (groupDao.existsByName(group.getName())) {
+                log.error("NoteServiceImpl::resolveLocationNoteGroup - overwriting collision Backup for {}", name);
+                groupDao.deleteById(groupDao.findByName(group.getName()).get().getId());
+            }
+
+            groupDao.save(group);
+        }
+
+        group = new Group();
+        group.setPrivacy(PrivacyType.INTERNAL);
+        group.setName(name);
+        group.setOwner(config.getSystemGroupOwner());
+        group.setContentType(PropertyType.NOTE);
+
+        return groupDao.save(group);
     }
 }
