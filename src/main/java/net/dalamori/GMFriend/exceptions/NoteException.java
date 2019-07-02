@@ -4,4 +4,7 @@ public class NoteException extends Exception {
     public NoteException(String description, Throwable ex){
         super(description,ex);
     }
+    public NoteException(String description) {
+        super(description);
+    }
 }

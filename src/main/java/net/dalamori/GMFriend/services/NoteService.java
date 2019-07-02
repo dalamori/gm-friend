@@ -10,18 +10,22 @@ public interface NoteService {
     Note create(Note note) throws NoteException;
 
     Note read(Long id) throws NoteException;
+    Note read(String name) throws NoteException;
+
+    boolean exists(Long id);
+    boolean exists(String name);
 
     Note update(Note note) throws NoteException;
 
     void delete(Note note) throws NoteException;
 
-    void attachToGlobalContext(Note note);
+    void attachToGlobalContext(Note note) throws NoteException;
 
     void attachToLocation(Note note, Location location) throws NoteException;
 
-    List<Note> getGlobalNotes();
+    List<Note> getGlobalNotes() throws NoteException;
 
-    List<Note> getLocationNotes(Location location);
+    List<Note> getLocationNotes(Location location) throws NoteException;
 
 
 }
