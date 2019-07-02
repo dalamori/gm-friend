@@ -277,6 +277,11 @@ public class NoteServiceImpl implements NoteService {
             group.setName(config.getSystemGroupCollisionPrefix().concat(name));
             group.setPrivacy(PrivacyType.PUBLIC);
 
+            if (groupService.exists(group.getName())) {
+                log.error("NoteServiceImpl::resolveLocationNoteGroup - overwriting collision Backup for {}", name);
+                groupService.delete(groupService.read(group.getName()));
+            }
+
             groupService.update(group);
         }
 
@@ -288,5 +293,4 @@ public class NoteServiceImpl implements NoteService {
 
         return groupService.create(group);
     }
-
 }

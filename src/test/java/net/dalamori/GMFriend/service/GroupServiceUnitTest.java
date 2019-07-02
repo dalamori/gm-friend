@@ -118,7 +118,7 @@ public class GroupServiceUnitTest {
         try {
             service.create(group);
 
-            Assert.fail("should refuse to create a group with an id");
+            Assert.fail("should refuse to create a group which fails validation");
 
         }
 

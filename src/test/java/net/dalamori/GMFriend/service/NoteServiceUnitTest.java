@@ -1,23 +1,30 @@
 package net.dalamori.GMFriend.service;
 
 import net.dalamori.GMFriend.config.DmFriendConfig;
+import net.dalamori.GMFriend.exceptions.GroupException;
 import net.dalamori.GMFriend.exceptions.NoteException;
+import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
+import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.NoteDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.NoteService;
 import net.dalamori.GMFriend.services.impl.NoteServiceImpl;
 import net.dalamori.GMFriend.testing.UnitTest;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Optional;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -31,7 +38,7 @@ public class NoteServiceUnitTest {
     @Mock private GroupService mockGroupService;
 
     private NoteServiceImpl impl;
-    private NoteService noteService;
+    private NoteService service;
     private Note note;
     private Note savedNote;
 
@@ -66,22 +73,402 @@ public class NoteServiceUnitTest {
         impl.setGroupService(mockGroupService);
         impl.setNoteDao(mockDao);
 
-        noteService = impl;
+        service = impl;
+
 
     }
 
     @Test
     public void noteService_create_shouldHappyPath() throws NoteException {
+        // given: a sample note to return from mock dao
+        Mockito.when(mockDao.save(note)).thenReturn(savedNote);
+
+        // when: I create the note
+        Note result = service.create(note);
+
+        // then: I expect to see the correct return value
+        Assert.assertEquals("got correct return value", savedNote, result);
+
+        // and: I expect to the right calls to the dao
+        Mockito.verify(mockDao).save(note);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_create_shouldFailIfIdSet() throws NoteException {
+        // given: a sample note to return from mock dao
+        Mockito.when(mockDao.save(note)).thenReturn(savedNote);
+
+        // and: that my sample note already has an ID set
+        note.setId(Long.valueOf(1));
+
+        // when: I create the note
+        try {
+            service.create(note);
+
+            Assert.fail("should refuse to create a note with an id");
+
+            // then: it should throw an error before the DAO is called
+        } catch(NoteException ex) {
+            Mockito.verify(mockDao, Mockito.never()).save(Mockito.any());
+
+            throw ex;
+        }
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_create_shouldFailWhenInvalid() throws NoteException {
+        // given: a sample note which doesn't conform to validation rules
+        note.setOwner("");
+        note.setPrivacy(null);
+
+        // when: I create the note
+        try {
+            service.create(note);
+
+            Assert.fail("should refuse to create a note which fails validation");
+
+        }
+
+        // then: it should throw an error before the DAO is called
+        catch(NoteException ex) {
+            Mockito.verify(mockDao, Mockito.never()).save(Mockito.any());
+
+            throw ex;
+        }
+    }
+
+    @Test
+    public void noteService_read_shouldHappyPathById() throws NoteException {
+        // given: a sample note saved in the db
+        Mockito.when(mockDao.findById(NOTE_ID)).thenReturn(Optional.of(savedNote));
+
+        // when: I try to lookup by ID
+        Note result = service.read(NOTE_ID);
+
+        // then: I should succeed;
+        Assert.assertEquals("notes should match", result, savedNote);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_read_shouldFailWhenNotFoundById() throws NoteException {
+        // given; nothing saved in the DB
+
+        // when: I try to lookup by ID
+        service.read(NOTE_ID);
+
+        // then: I should fail
+        Assert.fail("Should have thrown an error by now");
+    }
+
+    @Test
+    public void noteService_read_shouldHappyPathByTitle() throws NoteException {
+        // given: a sample note saved in the db
+        Mockito.when(mockDao.findByTitle(NOTE_TITLE)).thenReturn(Optional.of(savedNote));
+
+        // when: I try to lookup by Name
+        Note result = service.read(NOTE_TITLE);
+
+        // then: I should succeed;
+        Assert.assertEquals("notes should match", result, savedNote);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_read_shouldFailWhenNotFoundByName() throws NoteException {
+        // given: nothing saved in the DB
+
+        // when: I try to lookup by ID
+        service.read(NOTE_TITLE);
+
+        // then: I should fail
+        Assert.fail("Should have thrown an error by now");
+    }
+
+    @Test
+    public void noteService_exists_shouldHappyPathById() {
+        // given: a sample ID
+        Long id = null;
+
+        // and: a mock reply
+        Mockito.when(mockDao.existsById(id)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists(id);
+
+        // then: I expect to get a short-circuit false
+        Assert.assertFalse("should get default return", result);
+        Mockito.verify(mockDao, Mockito.never()).existsById(id);
+    }
+
+    @Test
+    public void noteService_exists_shouldHandleNullIds() {
+        // given: a sample ID
+        Long id = null;
+
+        // and: a mock reply
+        Mockito.when(mockDao.existsById(id)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists(id);
+
+        // then: I expect to get a short-circuit false
+        Assert.assertFalse("should get default return", result);
+        Mockito.verify(mockDao, Mockito.never()).existsById(id);
+    }
+
+    @Test
+    public void noteService_exists_shouldHappyPathByTitle() {
+        // given: a sample ID
+        String title = "War and Peace";
+
+        // and: a mock reply
+        Mockito.when(mockDao.existsByTitle(title)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists(title);
+
+        // then: I expect to see that passed thru to the dao, and the dao's retval returned
+        Assert.assertTrue("should get returnvalue from the dao", result);
+        Mockito.verify(mockDao).existsByTitle(title);
+    }
+
+    @Test
+    public void noteService_exists_shouldHandleNullStrings() {
+        // given: a sample ID
+        String title = null;
+
+        // and: a mock reply
+        Mockito.when(mockDao.existsByTitle(title)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists(title);
+
+        // then: I expect to get a short-circuit false
+        Assert.assertFalse("should get default return", result);
+        Mockito.verify(mockDao, Mockito.never()).existsByTitle(title);
+    }
+
+    @Test
+    public void noteService_update_shouldHappyPath() throws NoteException {
+        // given: an example note with updated attributes to save
+        note.setId(NOTE_ID);
+        note.setPrivacy(PrivacyType.HIDDEN);
+
+        // and: a saved copy of that note in the DB:
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(true);
+        Mockito.when(mockDao.save(note)).thenReturn(note);
+
+        // when: I update the note
+        Note result = service.update(note);
+
+        // then: I expect to see the updated result
+        Assert.assertEquals("return value should come from dao save call", note, result);
+
+        // and: I expect to see the proper calls to the Dao
+        Mockito.verify(mockDao).existsById(NOTE_ID);
+        Mockito.verify(mockDao).save(note);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_update_shouldFailWhenIdNotSet() throws NoteException {
+        // given: an example note with updated attributes to save, but no ID
+        note.setId(null);
+        note.setPrivacy(PrivacyType.PUBLIC);
+
+        // and: proper saved copies appear to be in the db
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(true);
+
+        // when: I try to update the note
+        try {
+            service.update(note);
+
+            Assert.fail("should refuse to update a note with a null id");
+
+        }
+
+        // then: it should throw an error before the DAO is called
+        catch(NoteException ex) {
+            Mockito.verify(mockDao, Mockito.never()).save(Mockito.any());
+
+            throw ex;
+        }
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_update_shouldFailWhenNotFound() throws NoteException {
+        // given: an example note with updated attributes to save
+        note.setId(NOTE_ID);
+        note.setPrivacy(PrivacyType.PUBLIC);
+
+        // and: no saved copies appear to be in the db
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(false);
+
+        // when: I try to update the note
+        try {
+            service.update(note);
+
+            Assert.fail("should refuse to update a note which doesnt exist");
+
+        }
+
+        // then: it should throw an error before the DAO is called
+        catch(NoteException ex) {
+            Mockito.verify(mockDao, Mockito.never()).save(Mockito.any());
+
+            throw ex;
+        }
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_update_shouldFailWhenInvalidNote() throws NoteException {
+        // given: an example note with invalid attributes to save
+        note.setId(NOTE_ID);
+        note.setPrivacy(null);
+        note.setOwner("");
+
+        // and: proper saved copies appear to be in the db
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(true);
+
+        // when: I try to update the note
+        try {
+            service.update(note);
+
+            Assert.fail("should refuse to create a note with bad attributes");
+
+        }
+
+        // then: it should throw an error before the DAO is called
+        catch(NoteException ex) {
+            Mockito.verify(mockDao, Mockito.never()).save(Mockito.any());
+
+            throw ex;
+        }
+    }
+
+    @Test
+    public void noteService_delete_shouldHappyPath() throws NoteException {
+        // given: a proper saved copy appears to be in the DB:
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(true);
+
+        // when: I try to delete the note
+        note.setId(NOTE_ID);
+        service.delete(note);
+
+        // then: I expect to see that call pass thru to to dao
+        Mockito.verify(mockDao).deleteById(NOTE_ID);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_delete_shouldFailWhenIdNotSet() throws NoteException {
+        // given: a proper saved copy appears to be in the DB:
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(true);
+
+        // when: I try to delete the note
+        note.setId(null);
+        service.delete(note);
+
+        // then: I expect to get an error
+        Assert.fail("should have thrown an error for no id by now");
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_delete_shouldFailWhenNotFound() throws NoteException {
+        // given: dao is set to report that note doesn't exist
+        Mockito.when(mockDao.existsById(NOTE_ID)).thenReturn(false);
+
+        // when: I try to delete the note
+        note.setId(NOTE_ID);
+        service.delete(note);
+
+        // then: I expect to see that call fail with a not found
+        Assert.fail("should have thrown a not found error by now");
+    }
+
+    @Test
+    public void noteServiceImpl_resolveNoteGroup_shouldHappyPath() throws GroupException {
+        // given: a note group saved in the db
+        String name = "Stuart";
+        Group group = makeNoteGroup(name);
+
+        Mockito.when(mockGroupService.exists(name)).thenReturn(true);
+        Mockito.when(mockGroupService.read(name)).thenReturn(group);
+
+        // when: I try to pull the group
+        Group result = impl.resolveNoteGroup(name);
+
+        // then: i expect to that group to be returned
+        Assert.assertEquals("should lookup the expected group", group, result);
 
     }
 
     @Test
-    public void setNoteService_create_shouldFailIfIdSet() throws NoteException {
+    public void noteServiceImpl_resolveNoteGroup_shouldCreateIfNeeded() throws GroupException {
+        // given: a note group saved in the db
+        String name = "Glenn";
+        Group group = makeNoteGroup(name);
 
+        Mockito.when(mockGroupService.exists(name)).thenReturn(false);
+        Mockito.when(mockGroupService.create(Mockito.any())).thenReturn(group);
+
+        // when: I try to pull the group
+        Group result = impl.resolveNoteGroup(name);
+
+        // then: i expect to that group to be returned
+        Assert.assertEquals("should return the created group", group, result);
     }
 
     @Test
-    public void setNoteService_create_shouldFailWhenInvalid() throws NoteException {
+    public void noteServiceImpl_resolveNoteGroup_shoulResolveConflict() throws GroupException {
+        // given: a non-note group
+        String name = "Stanley";
+        Group group = makeNoteGroup(name);
+        group.setContentType(PropertyType.LINK);
+
+        Mockito.when(mockGroupService.exists(name)).thenReturn(true);
+        Mockito.when(mockGroupService.read(name)).thenReturn(group);
+
+        // and: an existing group taking up the first notes' conflict spot
+        String conflictName = config.getSystemGroupCollisionPrefix().concat(name);
+        Group conflictGroup = makeNoteGroup(conflictName);
+        conflictGroup.setId(conflictGroup.getId() + 1);
+
+        Mockito.when(mockGroupService.exists(conflictName)).thenReturn(true);
+        Mockito.when(mockGroupService.read(conflictName)).thenReturn(conflictGroup);
+
+        // and: a third group to represent the new group to be created
+        Group newGroup = makeNoteGroup(name);
+        newGroup.setId(newGroup.getId() + 2);
+        Mockito.when(mockGroupService.create(Mockito.any())).thenReturn(newGroup);
+
+        // when: I try to resolve the group
+        Group result = impl.resolveNoteGroup(name);
+
+        // then: I expect to see a new group created, and returned
+        Assert.assertEquals("should return new group", newGroup, result);
+        Mockito.verify(mockGroupService).create(Mockito.any());
+
+        // and: I expect to see the original group renamed and saved
+        Assert.assertEquals("original should be renamed with conflict alert prefix", conflictName, group.getName());
+        Mockito.verify(mockGroupService).update(group);
+
+        // and: I expect the group previously occupying the conflict spot
+        Mockito.verify(mockGroupService).delete(conflictGroup);
 
     }
+
+
+    private Group makeNoteGroup(String name) {
+        Group group = new Group();
+        Long id = Long.valueOf(123);
+        Long contentId = Long.valueOf(321);
+
+        group.setPrivacy(PrivacyType.INTERNAL);
+        group.setOwner(config.getSystemGroupOwner());
+        group.setId(id);
+        group.setName(name);
+        group.getContents().add(contentId);
+        group.setContentType(PropertyType.NOTE);
+
+        return group;
+    }
+
 }
