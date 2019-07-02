@@ -8,6 +8,7 @@ import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.impl.GroupServiceImpl;
+import net.dalamori.GMFriend.testing.TestDataFactory;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,6 +61,7 @@ public class GroupServiceUnitTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        TestDataFactory.config = config;
 
         group = new Group();
         group.setName(GROUP_NAME);
@@ -398,7 +400,7 @@ public class GroupServiceUnitTest {
     public void noteServiceImpl_resolveNoteGroup_shouldHappyPath() throws GroupException {
         // given: a note group saved in the db
         String name = "Stuart";
-        Group group = makeNoteGroup(name);
+        Group group = TestDataFactory.makeGroup(name);
 
         Mockito.when(mockDao.existsByName(name)).thenReturn(true);
         Mockito.when(mockDao.findByName(name)).thenReturn(Optional.of(group));
@@ -415,7 +417,7 @@ public class GroupServiceUnitTest {
     public void noteServiceImpl_resolveNoteGroup_shouldCreateIfNeeded() throws GroupException {
         // given: a note group saved in the db
         String name = "Glenn";
-        Group group = makeNoteGroup(name);
+        Group group = TestDataFactory.makeGroup(name);
 
         Mockito.when(mockDao.existsByName(name)).thenReturn(false);
         Mockito.when(mockDao.save(Mockito.any())).thenReturn(group);
@@ -431,7 +433,7 @@ public class GroupServiceUnitTest {
     public void noteServiceImpl_resolveNoteGroup_shoulResolveConflict() throws GroupException {
         // given: a non-note group
         String name = "Stanley";
-        Group group = makeNoteGroup(name);
+        Group group = TestDataFactory.makeGroup(name);
         group.setContentType(PropertyType.LINK);
 
         Mockito.when(mockDao.existsByName(name)).thenReturn(true);
@@ -439,14 +441,14 @@ public class GroupServiceUnitTest {
 
         // and: an existing group taking up the first notes' conflict spot
         String conflictName = config.getSystemGroupCollisionPrefix().concat(name);
-        Group conflictGroup = makeNoteGroup(conflictName);
+        Group conflictGroup = TestDataFactory.makeGroup(conflictName);
         conflictGroup.setId(conflictGroup.getId() + 1);
 
         Mockito.when(mockDao.existsByName(conflictName)).thenReturn(true);
         Mockito.when(mockDao.findByName(conflictName)).thenReturn(Optional.of(conflictGroup));
 
         // and: a third group to represent the new group to be created
-        Group newGroup = makeNoteGroup(name);
+        Group newGroup = TestDataFactory.makeGroup(name);
         newGroup.setId(newGroup.getId() + 2);
 
         // and: a stub for the dao save method which will update conflictGroup and create newGroup
@@ -483,19 +485,4 @@ public class GroupServiceUnitTest {
 
     }
 
-
-    private Group makeNoteGroup(String name) {
-        Group group = new Group();
-        Long id = Long.valueOf(123);
-        Long contentId = Long.valueOf(321);
-
-        group.setPrivacy(PrivacyType.INTERNAL);
-        group.setOwner(config.getSystemGroupOwner());
-        group.setId(id);
-        group.setName(name);
-        group.getContents().add(contentId);
-        group.setContentType(PropertyType.NOTE);
-
-        return group;
-    }
 }

@@ -170,7 +170,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void attachToGlobalContext(Note note) throws NoteException {
         if (note.getId() == null) {
-            log.debug("NoteServiceImpl::attachToLocation - asked to attach unsaved note");
+            log.debug("NoteServiceImpl::attachToGlobalContext - asked to attach unsaved note");
             throw new NoteException("can't attach unsaved note");
         }
 
@@ -210,6 +210,57 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("unable to attach note to location", ex);
         }
     }
+
+    @Override
+    public void detachFromGlobalContext(Note note) throws NoteException {
+        if (note.getId() == null) {
+            log.debug("NoteServiceImpl::detachFromGlobalContext - asked to detach unsaved note");
+            throw new NoteException("can't detach unsaved note");
+        }
+
+        try {
+            Group notes = resolveGlobalNoteGroup();
+            Set<Long> contents = notes.getContents();
+
+            if (contents.contains(note.getId())) {
+                contents.remove(note.getId());
+
+                groupService.update(notes);
+            } else {
+                log.debug("NoteServiceImpl::detachFromGlobalContext asked to detach unattached note");
+                throw new NoteException("note not found in global context");
+            }
+
+        } catch (GroupException ex) {
+            log.warn("NoteServiceImpl::detachFromGlobalContext failed to detach note {}", note, ex);
+            throw new NoteException("unable to detach note to global list", ex);
+        }
+    }
+
+    @Override
+    public void detachFromLocation(Note note, Location location) throws NoteException {
+        if (note.getId() == null) {
+            log.debug("NoteServiceImpl::attachToLocation - asked to attach unsaved note");
+            throw new NoteException("can't attach unsaved note");
+        }
+
+        if (location.getId() == null) {
+            log.debug("NoteServiceImpl::attachToLocation - asked to attach to unsaved location");
+            throw new NoteException("can't attach to unsaved location");
+        }
+
+        try {
+            Group notes = resolveLocationNoteGroup(location);
+
+            notes.getContents().add(note.getId());
+
+            groupService.update(notes);
+        } catch (GroupException ex) {
+            log.warn("NoteServiceImpl::attachToLocation failed to attach note {} to location {}", note, location, ex);
+            throw new NoteException("unable to attach note to location", ex);
+        }
+    }
+
 
     @Override
     public List<Note> getGlobalNotes() throws NoteException {

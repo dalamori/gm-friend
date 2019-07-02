@@ -23,6 +23,10 @@ public interface NoteService {
 
     void attachToLocation(Note note, Location location) throws NoteException;
 
+    void detachFromGlobalContext(Note note) throws NoteException;
+
+    void detachFromLocation(Note note, Location location) throws NoteException;
+
     List<Note> getGlobalNotes() throws NoteException;
 
     List<Note> getLocationNotes(Location location) throws NoteException;

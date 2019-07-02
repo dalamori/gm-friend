@@ -384,5 +384,69 @@ public class NoteServiceUnitTest {
     }
 
 
+    @Test
+    public void noteService_attachToGlobalContext_shouldHappyPath() {
+        // given: a group
 
+    }
+
+    @Test
+    public void noteService_attachToGlobalContext_shouldFailWhenNoteIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_attachToLocation_shouldHappyPath() {
+
+    }
+
+    @Test
+    public void noteService_attatchToLocation_shouldFailWhenNoteIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_attachToLocation_shouldFailWhenLocationIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_detachFromGlobalContext_shouldHappyPath() {
+
+    }
+
+    @Test
+    public void noteService_detachFromGlobalContext_shouldFailWhenNoteIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_detachFromLocation_shouldHappyPath() {
+
+    }
+
+    @Test
+    public void noteService_detachFromLocation_shouldFailWhenNoteIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_detachFromLocation_shouldFailWhenLocationIdNotSet() {
+
+    }
+
+    @Test
+    public void noteService_getGlobalNotes_shouldHappyPath() {
+
+    }
+
+    @Test
+    public void noteService_getLocationNotes_shouldHappyPath() {
+
+    }
+
+    @Test
+    public void noteService_getLocationNotes_shouldFailWhenLocationIdNotSet() {
+
+    }
 }

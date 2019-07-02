@@ -7,7 +7,9 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.services.PropertyService;
 
 import java.util.List;
+
 /*
+
 public class PropertyServiceImpl implements PropertyService {
 
     @Override
@@ -60,4 +62,5 @@ public class PropertyServiceImpl implements PropertyService {
 
     }
 }
+
 */
