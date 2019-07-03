@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.validation.constraints.AssertTrue;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -61,16 +60,16 @@ public class GroupServiceUnitTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        TestDataFactory.config = config;
+        TestDataFactory.OWNER_NAME = config.getSystemGroupOwner();
 
-        group = new Group();
+        group = TestDataFactory.makeGroup();
         group.setName(GROUP_NAME);
         group.setOwner(OWNER);
         group.getContents().addAll(NOTE_IDS);
         group.setContentType(PropertyType.NOTE);
         group.setPrivacy(PrivacyType.NORMAL);
 
-        savedGroup = new Group();
+        savedGroup = TestDataFactory.makeGroup();
         savedGroup.setId(GROUP_ID);
         savedGroup.setName(GROUP_NAME);
         savedGroup.setOwner(OWNER);
@@ -430,10 +429,11 @@ public class GroupServiceUnitTest {
     }
 
     @Test
-    public void noteServiceImpl_resolveNoteGroup_shoulResolveConflict() throws GroupException {
+    public void noteServiceImpl_resolveNoteGroup_shouldResolveConflict() throws GroupException {
         // given: a non-note group
         String name = "Stanley";
-        Group group = TestDataFactory.makeGroup(name);
+        Long id = Long.valueOf(54321);
+        Group group = TestDataFactory.makeGroup(id, name);
         group.setContentType(PropertyType.LINK);
 
         Mockito.when(mockDao.existsByName(name)).thenReturn(true);
@@ -441,15 +441,13 @@ public class GroupServiceUnitTest {
 
         // and: an existing group taking up the first notes' conflict spot
         String conflictName = config.getSystemGroupCollisionPrefix().concat(name);
-        Group conflictGroup = TestDataFactory.makeGroup(conflictName);
-        conflictGroup.setId(conflictGroup.getId() + 1);
+        Group conflictGroup = TestDataFactory.makeGroup(id + 1, conflictName);
 
         Mockito.when(mockDao.existsByName(conflictName)).thenReturn(true);
         Mockito.when(mockDao.findByName(conflictName)).thenReturn(Optional.of(conflictGroup));
 
         // and: a third group to represent the new group to be created
-        Group newGroup = TestDataFactory.makeGroup(name);
-        newGroup.setId(newGroup.getId() + 2);
+        Group newGroup = TestDataFactory.makeGroup(id + 2, name);
 
         // and: a stub for the dao save method which will update conflictGroup and create newGroup
         Mockito.when(mockDao.save(Mockito.any())).thenAnswer(new Answer<Group>() {

@@ -11,6 +11,7 @@ import net.dalamori.GMFriend.repository.NoteDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.NoteService;
 import net.dalamori.GMFriend.services.impl.NoteServiceImpl;
+import net.dalamori.GMFriend.testing.TestDataFactory;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -385,19 +386,62 @@ public class NoteServiceUnitTest {
 
 
     @Test
-    public void noteService_attachToGlobalContext_shouldHappyPath() {
+    public void noteService_attachToGlobalContext_shouldHappyPath() throws NoteException, GroupException {
         // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE))).thenReturn(noteGroup);
+
+        // and: a saved note
+        Long id = Long.valueOf(4321);
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
+
+        // then: i expect to see the note id added to the group
+        Assert.assertTrue("note id added to group", noteGroup.getContents().contains(id));
+
+        // and: I expect to see the group saved
+        Mockito.verify(mockGroupService).update(noteGroup);
 
     }
 
-    @Test
-    public void noteService_attachToGlobalContext_shouldFailWhenNoteIdNotSet() {
+    @Test(expected = NoteException.class)
+    public void noteService_attachToGlobalContext_shouldFailWhenNoteIdNotSet() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved note
+        Long id = null;
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
+
+        // then: I expect it to fail
+        Assert.fail("should have thrown an error by now");
     }
 
     @Test
-    public void noteService_attachToLocation_shouldHappyPath() {
+    public void noteService_attachToLocation_shouldHappyPath() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved location
+
+        // and: a saved note
+        Long id = Long.valueOf(4321);
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
     }
 
     @Test
