@@ -5,9 +5,10 @@ public enum PropertyType {
     INTEGER,
     ITERATOR,
     LIST,
-    LOCATION,
     LINK,
+    LOCATION,
     NOTE,
+    PROPERTY,
     STRING,
     UNKNOWN
 }

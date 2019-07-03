@@ -33,6 +33,8 @@ public class GroupServiceImpl implements GroupService {
     @Autowired
     private GroupDao groupDao;
 
+    private static final ValidatorFactory VALIDATOR_FACTORY = Validation.buildDefaultValidatorFactory();
+
     @Override
     public Group create(Group group) throws GroupException {
 
@@ -46,8 +48,7 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("group to create duplicates a name already in the DB");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Group>> violations = validator.validate(group);
         if (violations.size() > 0) {
@@ -120,8 +121,7 @@ public class GroupServiceImpl implements GroupService {
             throw new GroupException("Group not found");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Group>> violations = validator.validate(group);
         if (violations.size() > 0) {

@@ -41,6 +41,8 @@ public class NoteServiceImpl implements NoteService {
     @Autowired
     private DmFriendConfig config;
 
+    private static final ValidatorFactory VALIDATOR_FACTORY = Validation.buildDefaultValidatorFactory();
+
     @Override
     public Note create(Note note) throws NoteException {
         if (note.getId() instanceof Long) {
@@ -53,8 +55,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("group to create duplicates a title already in the DB");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Note>> violations = validator.validate(note);
         if (violations.size() > 0) {
@@ -127,8 +128,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("Note not found");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Note>> violations = validator.validate(note);
         if (violations.size() > 0) {
@@ -240,12 +240,12 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void detachFromLocation(Note note, Location location) throws NoteException {
         if (note.getId() == null) {
-            log.debug("NoteServiceImpl::attachToLocation - asked to attach unsaved note");
+            log.debug("NoteServiceImpl::attachToLocation - asked to detach unsaved note");
             throw new NoteException("can't attach unsaved note");
         }
 
         if (location.getId() == null) {
-            log.debug("NoteServiceImpl::attachToLocation - asked to attach to unsaved location");
+            log.debug("NoteServiceImpl::attachToLocation - asked to detach from unsaved location");
             throw new NoteException("can't attach to unsaved location");
         }
 
@@ -256,8 +256,8 @@ public class NoteServiceImpl implements NoteService {
 
             groupService.update(notes);
         } catch (GroupException ex) {
-            log.warn("NoteServiceImpl::attachToLocation failed to attach note {} to location {}", note, location, ex);
-            throw new NoteException("unable to attach note to location", ex);
+            log.warn("NoteServiceImpl::detachFromLocation failed to detach note {} from location {}", note, location, ex);
+            throw new NoteException("unable to detach note to location", ex);
         }
     }
 
