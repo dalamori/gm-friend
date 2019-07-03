@@ -47,14 +47,10 @@ public class GroupServiceUnitTest {
     private Group group;
     private Group savedGroup;
 
-    public static final Long GROUP_ID = Long.valueOf(42);
+    public static final Long GROUP_ID = 42L;
     public static final String GROUP_NAME = "a List of Notes";
     public static final String OWNER = "Steve";
-    public static final Set<Long> NOTE_IDS = new HashSet<>(Arrays.asList(
-            Long.valueOf(1337),
-            Long.valueOf(7331),
-            Long.valueOf(7777),
-            Long.valueOf(9999)));
+    public static final Set<Long> NOTE_IDS = new HashSet<>(Arrays.asList(1337L, 7331L, 7777L, 9999L));
 
 
     @Before
@@ -106,7 +102,7 @@ public class GroupServiceUnitTest {
         Mockito.when(mockDao.save(group)).thenReturn(savedGroup);
 
         // and: that my sample group already has an ID set
-        group.setId(Long.valueOf(1));
+        group.setId(1L);
 
         // when: I create the group
         try {
@@ -194,7 +190,7 @@ public class GroupServiceUnitTest {
     @Test
     public void groupService_exists_shouldHappyPathById() {
         // given: a sample ID
-        Long id = Long.valueOf(42);
+        Long id = 42L;
 
         // and: a mock reply
         Mockito.when(mockDao.existsById(id)).thenReturn(true);
@@ -432,7 +428,7 @@ public class GroupServiceUnitTest {
     public void noteServiceImpl_resolveNoteGroup_shouldResolveConflict() throws GroupException {
         // given: a non-note group
         String name = "Stanley";
-        Long id = Long.valueOf(54321);
+        Long id = 54321L;
         Group group = TestDataFactory.makeGroup(id, name);
         group.setContentType(PropertyType.LINK);
 

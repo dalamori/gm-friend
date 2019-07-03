@@ -252,7 +252,7 @@ public class NoteServiceImpl implements NoteService {
         try {
             Group notes = resolveLocationNoteGroup(location);
 
-            notes.getContents().add(note.getId());
+            notes.getContents().remove(note.getId());
 
             groupService.update(notes);
         } catch (GroupException ex) {
