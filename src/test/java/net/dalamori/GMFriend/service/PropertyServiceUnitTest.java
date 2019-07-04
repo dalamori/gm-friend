@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -27,7 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -39,6 +44,7 @@ public class PropertyServiceUnitTest {
 
     @Mock private PropertyDao mockDao;
     @Mock private GroupService mockGroupService;
+    @Captor private ArgumentCaptor<List<Long>> findIdsCaptor;
 
     private PropertyService service;
     private Property property;
@@ -492,5 +498,294 @@ public class PropertyServiceUnitTest {
         Assert.fail("should refuse to attach the property");
     }
 
+    @Test
+    public void propertyService_detachFromCreature_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
 
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved creature
+        Creature creature = TestDataFactory.makeCreature();
+        creature.setId(1555L);
+
+        // and: a saved property
+        Long id = 4321L;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromCreature(property, creature);
+
+        // then: the group should have the new content
+        Assert.assertFalse("group should contain propertyId", propertyGroup.getContents().contains(id));
+
+        // and: that group should be updated
+        Mockito.verify(mockGroupService).update(propertyGroup);
+    }
+
+    @Test(expected = PropertyException.class)
+    public void propertyService_detachFromCreature_shouldFailWhenPropertyIdNotSet() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved creature
+        Creature creature = TestDataFactory.makeCreature(1555L, "Swamp Thing");
+
+        // and: a saved property
+        Long id = null;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromCreature(property, creature);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved Property");
+    }
+
+    @Test(expected = PropertyException.class)
+    public void propertyService_detachFromCreature_shouldFailWhenCreatureIdNotSet() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved creature
+        Creature creature = TestDataFactory.makeCreature(null, "Aquaman");
+
+        // and: a saved property
+        Long id = 8080L;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromCreature(property, creature);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved Property");
+    }
+
+    @Test
+    public void propertyService_detachFromMobile_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved mobile
+        Mobile mobile = TestDataFactory.makeMobile();
+        mobile.setId(1555L);
+
+        // and: a saved property
+        Long id = 4321L;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromMobile(property, mobile);
+
+        // then: the group should have the new content
+        Assert.assertFalse("group should contain propertyId", propertyGroup.getContents().contains(id));
+
+        // and: that group should be updated
+        Mockito.verify(mockGroupService).update(propertyGroup);
+    }
+
+    @Test(expected = PropertyException.class)
+    public void propertyService_detachFromMobile_shouldFailWhenPropertyIdNotSet() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved mobile
+        Mobile mobile = TestDataFactory.makeMobile(1555L, "Swamp Thing");
+
+        // and: a saved property
+        Long id = null;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromMobile(property, mobile);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved Property");
+    }
+
+    @Test(expected = PropertyException.class)
+    public void propertyService_detachFromMobile_shouldFailWhenMobileIdNotSet() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved mobile
+        Mobile mobile = TestDataFactory.makeMobile(null, "Aquaman");
+
+        // and: a saved property
+        Long id = 8080L;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromMobile(property, mobile);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved Property");
+    }
+
+    @Test
+    public void propertyService_detachFromGlobalContext_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved property
+        Long id = 4321L;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromGlobalContext(property);
+
+        // then: the group should have the new content
+        Assert.assertFalse("group should contain propertyId", propertyGroup.getContents().contains(id));
+
+        // and: that group should be updated
+        Mockito.verify(mockGroupService).update(propertyGroup);
+    }
+
+    @Test(expected = PropertyException.class)
+    public void propertyService_detachFromGlobalContext_shouldFailWhenPropertyIdNotSet() throws GroupException, PropertyException {
+        // given: a group
+        Group propertyGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.PROPERTY)))
+                .thenReturn(propertyGroup);
+
+        // and: a saved property
+        Long id = null;
+        property.setId(id);
+        propertyGroup.getContents().add(id);
+
+        // when: I try to detach the property
+        service.detachFromGlobalContext(property);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved Property");
+    }
+
+    @Test
+    public void propertyService_getCreatureProperties_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a mock response list
+        Long id = 1400L;
+        List<Property> propertyList = new ArrayList<>();
+        propertyList.add(TestDataFactory.makeProperty(id, "Property A"));
+        propertyList.add(TestDataFactory.makeProperty(id + 1, "Property B"));
+        propertyList.add(TestDataFactory.makeProperty(id + 2, "Property C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(propertyList);
+
+        // and: a group containing the IDs
+        Group creaturePropertyGroup = TestDataFactory.makeGroup();
+        Set<Long> creaturePropertyContents = creaturePropertyGroup.getContents();
+        creaturePropertyContents.add(id);
+        creaturePropertyContents.add(id + 1);
+        creaturePropertyContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(creaturePropertyGroup);
+
+        // and: a creature;
+        Creature creature = TestDataFactory.makeCreature(5400L, "Test Creature");
+
+        // when: I get global properties
+        List<Property> result = service.getCreatureProperties(creature);
+
+        // then: i expect to see the the mock propertyList passed back as retval
+        Assert.assertEquals("should return propertyList", propertyList, result);
+
+        // and: I expect to see the group contents passed to the propertyDao
+        Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());
+        Set<Long> capturedIds = (Set<Long>) findIdsCaptor.getValue();
+        Assert.assertEquals("should pass mock group contents into dao", creaturePropertyContents, capturedIds);
+    }
+
+    @Test
+    public void propertyService_getMobileProperties_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a mock response list
+        Long id = 1400L;
+        List<Property> propertyList = new ArrayList<>();
+        propertyList.add(TestDataFactory.makeProperty(id, "Property A"));
+        propertyList.add(TestDataFactory.makeProperty(id + 1, "Property B"));
+        propertyList.add(TestDataFactory.makeProperty(id + 2, "Property C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(propertyList);
+
+        // and: a group containing the IDs
+        Group mobilePropertyGroup = TestDataFactory.makeGroup();
+        Set<Long> mobilePropertyContents = mobilePropertyGroup.getContents();
+        mobilePropertyContents.add(id);
+        mobilePropertyContents.add(id + 1);
+        mobilePropertyContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(mobilePropertyGroup);
+
+        // and: a mobile;
+        Mobile mobile = TestDataFactory.makeMobile(5400L, "Test Mobile");
+
+        // when: I get global properties
+        List<Property> result = service.getMobileProperties(mobile);
+
+        // then: i expect to see the the mock propertyList passed back as retval
+        Assert.assertEquals("should return propertyList", propertyList, result);
+
+        // and: I expect to see the group contents passed to the propertyDao
+        Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());
+        Set<Long> capturedIds = (Set<Long>) findIdsCaptor.getValue();
+        Assert.assertEquals("should pass mock group contents into dao", mobilePropertyContents, capturedIds);
+    }
+
+    @Test
+    public void propertyService_getGlobalProperties_shouldHappyPath() throws GroupException, PropertyException {
+        // given: a mock response list
+        Long id = 1400L;
+        List<Property> propertyList = new ArrayList<>();
+        propertyList.add(TestDataFactory.makeProperty(id, "Property A"));
+        propertyList.add(TestDataFactory.makeProperty(id + 1, "Property B"));
+        propertyList.add(TestDataFactory.makeProperty(id + 2, "Property C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(propertyList);
+
+        // and: a group containing the IDs
+        Group globalPropertyGroup = TestDataFactory.makeGroup();
+        Set<Long> globalPropertyContents = globalPropertyGroup.getContents();
+        globalPropertyContents.add(id);
+        globalPropertyContents.add(id + 1);
+        globalPropertyContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(globalPropertyGroup);
+
+        // when: I get global properties
+        List<Property> result = service.getGlobalProperties();
+
+        // then: i expect to see the the mock propertyList passed back as retval
+        Assert.assertEquals("should return propertyList", propertyList, result);
+
+        // and: I expect to see the group contents passed to the propertyDao
+        Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());
+        Set<Long> capturedIds = (Set<Long>) findIdsCaptor.getValue();
+        Assert.assertEquals("should pass mock group contents into dao", globalPropertyContents, capturedIds);
+    }
 }
