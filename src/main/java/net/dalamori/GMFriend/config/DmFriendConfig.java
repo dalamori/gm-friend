@@ -14,7 +14,7 @@ import org.springframework.context.annotation.PropertySources;
 })
 public class DmFriendConfig {
 
-    @Value("${groups.system.collisionPrefix:__LOST+FOUND__}")
+    @Value("${groups.system.collisionPrefix:__LOST+FOUND=}")
     private String systemGroupCollisionPrefix;
 
     @Value("${groups.system.creaturePropertyAction:Properties for Creature #}")
