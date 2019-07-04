@@ -193,7 +193,21 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public void attachToGlobalContext(Property property) throws PropertyException {
+        if (property.getId() == null) {
+            log.debug("PropertyServiceImpl::attachToCreature - asked to attach unsaved property");
+            throw new PropertyException("can't attach unsaved property");
+        }
 
+        try {
+            Group propertys = resolveGlobalPropertiesGroup();
+
+            propertys.getContents().add(property.getId());
+
+            groupService.update(propertys);
+        } catch (GroupException ex) {
+            log.warn("PropertyServiceImpl::attachToCreature failed to attach property {} to global context", property, ex);
+            throw new PropertyException("unable to attach property to creature", ex);
+        }
     }
 
     @Override
