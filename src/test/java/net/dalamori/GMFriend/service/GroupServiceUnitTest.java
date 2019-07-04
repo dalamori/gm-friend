@@ -1,5 +1,6 @@
 package net.dalamori.GMFriend.service;
 
+import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.GroupException;
 import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
@@ -7,15 +8,21 @@ import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.impl.GroupServiceImpl;
+import net.dalamori.GMFriend.testing.TestDataFactory;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -29,34 +36,36 @@ import java.util.Set;
 @Category(UnitTest.class)
 public class GroupServiceUnitTest {
 
+    @Autowired
+    public DmFriendConfig config;
+
     @Mock private GroupDao mockDao;
+
+    @Captor private ArgumentCaptor<Group> groupCaptor;
 
     private GroupService service;
     private Group group;
     private Group savedGroup;
 
-    public static final Long GROUP_ID = Long.valueOf(42);
+    public static final Long GROUP_ID = 42L;
     public static final String GROUP_NAME = "a List of Notes";
     public static final String OWNER = "Steve";
-    public static final Set<Long> NOTE_IDS = new HashSet<>(Arrays.asList(
-            Long.valueOf(1337),
-            Long.valueOf(7331),
-            Long.valueOf(7777),
-            Long.valueOf(9999)));
+    public static final Set<Long> NOTE_IDS = new HashSet<>(Arrays.asList(1337L, 7331L, 7777L, 9999L));
 
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        TestDataFactory.OWNER_NAME = config.getSystemGroupOwner();
 
-        group = new Group();
+        group = TestDataFactory.makeGroup();
         group.setName(GROUP_NAME);
         group.setOwner(OWNER);
         group.getContents().addAll(NOTE_IDS);
         group.setContentType(PropertyType.NOTE);
         group.setPrivacy(PrivacyType.NORMAL);
 
-        savedGroup = new Group();
+        savedGroup = TestDataFactory.makeGroup();
         savedGroup.setId(GROUP_ID);
         savedGroup.setName(GROUP_NAME);
         savedGroup.setOwner(OWNER);
@@ -66,6 +75,7 @@ public class GroupServiceUnitTest {
 
         GroupServiceImpl impl = new GroupServiceImpl();
         impl.setGroupDao(mockDao);
+        impl.setConfig(config);
 
         service = impl;
     }
@@ -92,7 +102,7 @@ public class GroupServiceUnitTest {
         Mockito.when(mockDao.save(group)).thenReturn(savedGroup);
 
         // and: that my sample group already has an ID set
-        group.setId(Long.valueOf(1));
+        group.setId(1L);
 
         // when: I create the group
         try {
@@ -180,7 +190,7 @@ public class GroupServiceUnitTest {
     @Test
     public void groupService_exists_shouldHappyPathById() {
         // given: a sample ID
-        Long id = Long.valueOf(42);
+        Long id = 42L;
 
         // and: a mock reply
         Mockito.when(mockDao.existsById(id)).thenReturn(true);
@@ -380,4 +390,93 @@ public class GroupServiceUnitTest {
         // then: I expect to see that call fail with a not found
         Assert.fail("should have thrown a not found error by now");
     }
+
+    @Test
+    public void noteServiceImpl_resolveNoteGroup_shouldHappyPath() throws GroupException {
+        // given: a note group saved in the db
+        String name = "Stuart";
+        Group group = TestDataFactory.makeGroup(name);
+
+        Mockito.when(mockDao.existsByName(name)).thenReturn(true);
+        Mockito.when(mockDao.findByName(name)).thenReturn(Optional.of(group));
+
+        // when: I try to pull the group
+        Group result = service.resolveSystemGroup(name, PropertyType.NOTE);
+
+        // then: i expect to that group to be returned
+        Assert.assertEquals("should lookup the expected group", group, result);
+
+    }
+
+    @Test
+    public void noteServiceImpl_resolveNoteGroup_shouldCreateIfNeeded() throws GroupException {
+        // given: a note group saved in the db
+        String name = "Glenn";
+        Group group = TestDataFactory.makeGroup(name);
+
+        Mockito.when(mockDao.existsByName(name)).thenReturn(false);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(group);
+
+        // when: I try to pull the group
+        Group result = service.resolveSystemGroup(name, PropertyType.NOTE);
+
+        // then: i expect to that group to be returned
+        Assert.assertEquals("should return the created group", group, result);
+    }
+
+    @Test
+    public void noteServiceImpl_resolveNoteGroup_shouldResolveConflict() throws GroupException {
+        // given: a non-note group
+        String name = "Stanley";
+        Long id = 54321L;
+        Group group = TestDataFactory.makeGroup(id, name);
+        group.setContentType(PropertyType.LINK);
+
+        Mockito.when(mockDao.existsByName(name)).thenReturn(true);
+        Mockito.when(mockDao.findByName(name)).thenReturn(Optional.of(group));
+
+        // and: an existing group taking up the first notes' conflict spot
+        String conflictName = config.getSystemGroupCollisionPrefix().concat(name);
+        Group conflictGroup = TestDataFactory.makeGroup(id + 1, conflictName);
+
+        Mockito.when(mockDao.existsByName(conflictName)).thenReturn(true);
+        Mockito.when(mockDao.findByName(conflictName)).thenReturn(Optional.of(conflictGroup));
+
+        // and: a third group to represent the new group to be created
+        Group newGroup = TestDataFactory.makeGroup(id + 2, name);
+
+        // and: a stub for the dao save method which will update conflictGroup and create newGroup
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(new Answer<Group>() {
+            @Override
+            public Group answer(InvocationOnMock invocation) throws Throwable {
+                Group group = invocation.getArgument(0);
+
+                if (group.getId() == null) {
+                    // create
+                    return newGroup;
+                } else {
+                    // update
+                    return conflictGroup;
+                }
+            }
+        });
+
+        // when: I try to resolve the group
+        Group result = service.resolveSystemGroup(name, PropertyType.NOTE);
+
+        // then: I expect to see a new group created, saved, and returned
+        Assert.assertEquals("should return new group", newGroup, result);
+
+        Mockito.verify(mockDao, Mockito.times(2)).save(groupCaptor.capture());
+        Assert.assertEquals("should save a new group with the proper name", name, groupCaptor.getAllValues().get(1).getName());
+
+        // and: I expect to see the original group renamed and saved
+        Assert.assertEquals("original should be renamed with conflict alert prefix", conflictName, group.getName());
+        Assert.assertEquals("should save the updated original group", groupCaptor.getAllValues().get(0), group);
+
+        // and: I expect the group previously occupying the conflict spot
+        Mockito.verify(mockDao).deleteById(conflictGroup.getId());
+
+    }
+
 }

@@ -41,6 +41,8 @@ public class NoteServiceImpl implements NoteService {
     @Autowired
     private DmFriendConfig config;
 
+    private static final ValidatorFactory VALIDATOR_FACTORY = Validation.buildDefaultValidatorFactory();
+
     @Override
     public Note create(Note note) throws NoteException {
         if (note.getId() instanceof Long) {
@@ -53,8 +55,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("group to create duplicates a title already in the DB");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Note>> violations = validator.validate(note);
         if (violations.size() > 0) {
@@ -127,8 +128,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("Note not found");
         }
 
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
+        Validator validator = VALIDATOR_FACTORY.getValidator();
 
         Set<ConstraintViolation<Note>> violations = validator.validate(note);
         if (violations.size() > 0) {
@@ -170,7 +170,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void attachToGlobalContext(Note note) throws NoteException {
         if (note.getId() == null) {
-            log.debug("NoteServiceImpl::attachToLocation - asked to attach unsaved note");
+            log.debug("NoteServiceImpl::attachToGlobalContext - asked to attach unsaved note");
             throw new NoteException("can't attach unsaved note");
         }
 
@@ -210,6 +210,57 @@ public class NoteServiceImpl implements NoteService {
             throw new NoteException("unable to attach note to location", ex);
         }
     }
+
+    @Override
+    public void detachFromGlobalContext(Note note) throws NoteException {
+        if (note.getId() == null) {
+            log.debug("NoteServiceImpl::detachFromGlobalContext - asked to detach unsaved note");
+            throw new NoteException("can't detach unsaved note");
+        }
+
+        try {
+            Group notes = resolveGlobalNoteGroup();
+            Set<Long> contents = notes.getContents();
+
+            if (contents.contains(note.getId())) {
+                contents.remove(note.getId());
+
+                groupService.update(notes);
+            } else {
+                log.debug("NoteServiceImpl::detachFromGlobalContext asked to detach unattached note");
+                throw new NoteException("note not found in global context");
+            }
+
+        } catch (GroupException ex) {
+            log.warn("NoteServiceImpl::detachFromGlobalContext failed to detach note {}", note, ex);
+            throw new NoteException("unable to detach note to global list", ex);
+        }
+    }
+
+    @Override
+    public void detachFromLocation(Note note, Location location) throws NoteException {
+        if (note.getId() == null) {
+            log.debug("NoteServiceImpl::attachToLocation - asked to detach unsaved note");
+            throw new NoteException("can't attach unsaved note");
+        }
+
+        if (location.getId() == null) {
+            log.debug("NoteServiceImpl::attachToLocation - asked to detach from unsaved location");
+            throw new NoteException("can't attach to unsaved location");
+        }
+
+        try {
+            Group notes = resolveLocationNoteGroup(location);
+
+            notes.getContents().remove(note.getId());
+
+            groupService.update(notes);
+        } catch (GroupException ex) {
+            log.warn("NoteServiceImpl::detachFromLocation failed to detach note {} from location {}", note, location, ex);
+            throw new NoteException("unable to detach note to location", ex);
+        }
+    }
+
 
     @Override
     public List<Note> getGlobalNotes() throws NoteException {
@@ -253,44 +304,13 @@ public class NoteServiceImpl implements NoteService {
                 config.getSystemGroupLocationNoteAction(),
                 location.getId());
 
-        return resolveNoteGroup(name);
+        return groupService.resolveSystemGroup(name, PropertyType.NOTE);
     }
 
     private Group resolveGlobalNoteGroup() throws GroupException {
         String name = config.getSystemGroupPrefix().concat(config.getSystemGroupGlobalNoteAction());
-        return resolveNoteGroup(name);
+        return groupService.resolveSystemGroup(name, PropertyType.NOTE);
     }
 
-    public Group resolveNoteGroup(String name) throws GroupException {
-        Group group;
 
-        if (groupService.exists(name)) {
-            group = groupService.read(name);
-
-            // check type before returning
-            if (group.getContentType() == PropertyType.NOTE) {
-                return group;
-            }
-
-            // try to flag collision and recover, but if errors occur then they occur...
-            log.warn("NoteServiceImpl::resolveLocationNoteGroup collision detected on {}.", name);
-            group.setName(config.getSystemGroupCollisionPrefix().concat(name));
-            group.setPrivacy(PrivacyType.PUBLIC);
-
-            if (groupService.exists(group.getName())) {
-                log.error("NoteServiceImpl::resolveLocationNoteGroup - overwriting collision Backup for {}", name);
-                groupService.delete(groupService.read(group.getName()));
-            }
-
-            groupService.update(group);
-        }
-
-        group = new Group();
-        group.setPrivacy(PrivacyType.INTERNAL);
-        group.setName(name);
-        group.setOwner(config.getSystemGroupOwner());
-        group.setContentType(PropertyType.NOTE);
-
-        return groupService.create(group);
-    }
 }

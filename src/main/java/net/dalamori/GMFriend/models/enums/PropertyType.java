@@ -1,13 +1,16 @@
 package net.dalamori.GMFriend.models.enums;
 
 public enum PropertyType {
+    CREATURE,
     DECIMAL,
     INTEGER,
     ITERATOR,
     LIST,
-    LOCATION,
     LINK,
+    LOCATION,
+    MOBILE,
     NOTE,
+    PROPERTY,
     STRING,
     UNKNOWN
 }

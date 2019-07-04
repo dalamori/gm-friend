@@ -12,7 +12,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -24,30 +25,26 @@ public class Property {
     @Column(nullable = false, name = "ID")
     private Long id;
 
+    @NotBlank
     @Column(nullable = false, name = "NAME")
     private String name;
 
+    @NotBlank
     @Column(nullable = false, name = "VALUE")
     private String value;  // may be name of resource, or literal value, depending on type
 
-    @Transient
-    private int turns;
-
-    @Transient
-    private boolean alarm;
-
-    @Transient
-    private int listOffset;  // side-stepping issues of iterator type
-
+    @NotNull
     @Column(nullable = false, name = "PROPERTY_TYPE")
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
+    @NotNull
     @Column(nullable = false, name = "PRIVACY_TYPE")
     @Enumerated(EnumType.STRING)
     private PrivacyType privacy;
 
-    @Column(nullable = true, name = "OWNER")
+    @NotBlank
+    @Column(nullable = false, name = "OWNER")
     private String owner;
 
 }

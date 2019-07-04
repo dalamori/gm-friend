@@ -4,6 +4,7 @@ import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.GroupException;
 import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.models.Group;
+import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
@@ -11,12 +12,15 @@ import net.dalamori.GMFriend.repository.NoteDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.NoteService;
 import net.dalamori.GMFriend.services.impl.NoteServiceImpl;
+import net.dalamori.GMFriend.testing.TestDataFactory;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -24,7 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -36,18 +43,13 @@ public class NoteServiceUnitTest {
 
     @Mock private NoteDao mockDao;
     @Mock private GroupService mockGroupService;
+    @Captor private ArgumentCaptor<Iterable<Long>> findIdsCaptor;
 
-    private NoteServiceImpl impl;
     private NoteService service;
     private Note note;
     private Note savedNote;
 
-    public static final Long NOTE_ID = Long.valueOf(8675309);
-    public static final String NOTE_BODY = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-            + "Nunc eget metus consequat orci blandit aliquet. Cras in porttitor arcu. Suspendisse interdum ultrices "
-            + "dui eu tempor. Pellentesque id auctor est, at malesuada magna. Ut dignissim elit sit amet tempus "
-            + "imperdiet. Phasellus consequat dignissim tortor, eu eleifend sapien pulvinar at. Quisque lacinia dui "
-            + "eget lectus pharetra, ut ullamcorper tellus finibus. Donec at pharetra nunc, eget feugiat elit.";
+    public static final Long NOTE_ID = 8675309L;
     public static final String NOTE_OWNER = "Some Test Guy";
     public static final String NOTE_TITLE = "A Test Title";
 
@@ -55,19 +57,15 @@ public class NoteServiceUnitTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        note = new Note();
-        note.setTitle(NOTE_TITLE);
-        note.setBody(NOTE_BODY);
+        note = TestDataFactory.makeNote(null, NOTE_TITLE);
         note.setOwner(NOTE_OWNER);
         note.setPrivacy(PrivacyType.NORMAL);
 
-        savedNote = new Note();
-        savedNote.setId(NOTE_ID);
-        savedNote.setTitle(NOTE_TITLE);
-        savedNote.setBody(NOTE_BODY);
+        savedNote = TestDataFactory.makeNote(NOTE_ID, NOTE_TITLE);
         savedNote.setOwner(NOTE_OWNER);
         savedNote.setPrivacy(PrivacyType.NORMAL);
 
+        NoteServiceImpl impl;
         impl = new NoteServiceImpl();
         impl.setConfig(config);
         impl.setGroupService(mockGroupService);
@@ -383,92 +381,341 @@ public class NoteServiceUnitTest {
         Assert.fail("should have thrown a not found error by now");
     }
 
-    @Test
-    public void noteServiceImpl_resolveNoteGroup_shouldHappyPath() throws GroupException {
-        // given: a note group saved in the db
-        String name = "Stuart";
-        Group group = makeNoteGroup(name);
-
-        Mockito.when(mockGroupService.exists(name)).thenReturn(true);
-        Mockito.when(mockGroupService.read(name)).thenReturn(group);
-
-        // when: I try to pull the group
-        Group result = impl.resolveNoteGroup(name);
-
-        // then: i expect to that group to be returned
-        Assert.assertEquals("should lookup the expected group", group, result);
-
-    }
 
     @Test
-    public void noteServiceImpl_resolveNoteGroup_shouldCreateIfNeeded() throws GroupException {
-        // given: a note group saved in the db
-        String name = "Glenn";
-        Group group = makeNoteGroup(name);
+    public void noteService_attachToGlobalContext_shouldHappyPath() throws NoteException, GroupException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
-        Mockito.when(mockGroupService.exists(name)).thenReturn(false);
-        Mockito.when(mockGroupService.create(Mockito.any())).thenReturn(group);
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE))).thenReturn(noteGroup);
 
-        // when: I try to pull the group
-        Group result = impl.resolveNoteGroup(name);
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
 
-        // then: i expect to that group to be returned
-        Assert.assertEquals("should return the created group", group, result);
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
+
+        // then: i expect to see the note id added to the group
+        Assert.assertTrue("note id added to group", noteGroup.getContents().contains(id));
+
+        // and: I expect to see the group saved
+        Mockito.verify(mockGroupService).update(noteGroup);
+
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_attachToGlobalContext_shouldFailWhenNoteIdNotSet() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved note
+        Long id = null;
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
+
+        // then: I expect it to fail
+        Assert.fail("should have thrown an error by now");
     }
 
     @Test
-    public void noteServiceImpl_resolveNoteGroup_shoulResolveConflict() throws GroupException {
-        // given: a non-note group
-        String name = "Stanley";
-        Group group = makeNoteGroup(name);
-        group.setContentType(PropertyType.LINK);
+    public void noteService_attachToLocation_shouldHappyPath() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
-        Mockito.when(mockGroupService.exists(name)).thenReturn(true);
-        Mockito.when(mockGroupService.read(name)).thenReturn(group);
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
 
-        // and: an existing group taking up the first notes' conflict spot
-        String conflictName = config.getSystemGroupCollisionPrefix().concat(name);
-        Group conflictGroup = makeNoteGroup(conflictName);
-        conflictGroup.setId(conflictGroup.getId() + 1);
+        // and: a saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(1555L);
 
-        Mockito.when(mockGroupService.exists(conflictName)).thenReturn(true);
-        Mockito.when(mockGroupService.read(conflictName)).thenReturn(conflictGroup);
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
 
-        // and: a third group to represent the new group to be created
-        Group newGroup = makeNoteGroup(name);
-        newGroup.setId(newGroup.getId() + 2);
-        Mockito.when(mockGroupService.create(Mockito.any())).thenReturn(newGroup);
+        // when: I try to attach the note
+        service.attachToLocation(note, location);
 
-        // when: I try to resolve the group
-        Group result = impl.resolveNoteGroup(name);
+        // then: the group should have the new content
+        Assert.assertTrue("group should contain noteId", noteGroup.getContents().contains(id));
 
-        // then: I expect to see a new group created, and returned
-        Assert.assertEquals("should return new group", newGroup, result);
-        Mockito.verify(mockGroupService).create(Mockito.any());
+        // and: that group should be updated
+        Mockito.verify(mockGroupService).update(noteGroup);
+    }
 
-        // and: I expect to see the original group renamed and saved
-        Assert.assertEquals("original should be renamed with conflict alert prefix", conflictName, group.getName());
-        Mockito.verify(mockGroupService).update(group);
+    @Test(expected = NoteException.class)
+    public void noteService_attachToLocation_shouldFailWhenNoteIdNotSet() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
-        // and: I expect the group previously occupying the conflict spot
-        Mockito.verify(mockGroupService).delete(conflictGroup);
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(1555L);
+
+        // and: a saved note
+        Long id = null;
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToGlobalContext(note);
+
+        // then: I should get a NoteException
+        Assert.fail("Should refuse to attach the note");
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_attachToLocation_shouldFailWhenLocationIdNotSet() throws NoteException, GroupException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: an un-saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(null);
+
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
+
+        // when: I try to attach the note
+        service.attachToLocation(note, location);
+
+        // then: I should get a NoteException
+        Assert.fail("Should refuse to attach the note");
+    }
+
+    @Test
+    public void noteService_detachFromGlobalContext_shouldHappyPath() throws NoteException, GroupException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE))).thenReturn(noteGroup);
+
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
+        noteGroup.getContents().add(id);
+
+        // when: I try to attach the note
+        service.detachFromGlobalContext(note);
+
+        // then: I expect to see the note id added to the group
+        Assert.assertFalse("note id removed to group", noteGroup.getContents().contains(id));
+
+        // and: I expect to see the group saved
+        Mockito.verify(mockGroupService).update(noteGroup);
 
     }
 
+    @Test(expected = NoteException.class)
+    public void noteService_detachFromGlobalContext_shouldFailWhenNoteIdNotSet() throws NoteException, GroupException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
 
-    private Group makeNoteGroup(String name) {
-        Group group = new Group();
-        Long id = Long.valueOf(123);
-        Long contentId = Long.valueOf(321);
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE))).thenReturn(noteGroup);
 
-        group.setPrivacy(PrivacyType.INTERNAL);
-        group.setOwner(config.getSystemGroupOwner());
-        group.setId(id);
-        group.setName(name);
-        group.getContents().add(contentId);
-        group.setContentType(PropertyType.NOTE);
+        // and: a saved note
+        Long id = null;
+        note.setId(id);
+        noteGroup.getContents().add(id);
 
-        return group;
+        // when: I try to attach the note
+        service.detachFromGlobalContext(note);
+
+        // then: I expect to fail
+        Assert.fail("should throw a NoteException");
     }
 
+    @Test
+    public void noteService_detachFromLocation_shouldHappyPath() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(1555L);
+
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
+        noteGroup.getContents().add(id);
+
+        // when: I try to detach the note
+        service.detachFromLocation(note, location);
+
+        // then: the group should have the new content
+        Assert.assertFalse("group should contain noteId", noteGroup.getContents().contains(id));
+
+        // and: that group should be updated
+        Mockito.verify(mockGroupService).update(noteGroup);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_detachFromLocation_shouldFailWhenNoteIdNotSet() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: a saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(1555L);
+
+        // and: a saved note
+        Long id = null;
+        note.setId(id);
+        noteGroup.getContents().add(id);
+
+        // when: I try to detach the note
+        service.detachFromLocation(note, location);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach unsaved note");
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_detachFromLocation_shouldFailWhenLocationIdNotSet() throws GroupException, NoteException {
+        // given: a group
+        Group noteGroup = TestDataFactory.makeGroup();
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.anyString(), Mockito.eq(PropertyType.NOTE)))
+                .thenReturn(noteGroup);
+
+        // and: an un-saved location
+        Location location = TestDataFactory.makeLocation();
+        location.setId(null);
+
+        // and: a saved note
+        Long id = 4321L;
+        note.setId(id);
+        noteGroup.getContents().add(id);
+
+        // when: I try to detach the note
+        service.detachFromLocation(note, location);
+
+        // then: I should fail
+        Assert.fail("should refuse to detach from an unsaved location");
+    }
+
+    @Test
+    public void noteService_getGlobalNotes_shouldHappyPath() throws GroupException, NoteException {
+        // given: a mock response list
+        Long id = 1000L;
+        List<Note> noteList = new ArrayList<>();
+        noteList.add(TestDataFactory.makeNote(id, "Note A"));
+        noteList.add(TestDataFactory.makeNote(id + 1, "Note B"));
+        noteList.add(TestDataFactory.makeNote(id + 2, "Note C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(noteList);
+
+        // and: a group containing the IDs
+        Group globalNoteGroup = TestDataFactory.makeGroup();
+        Set<Long> globalNoteContents = globalNoteGroup.getContents();
+        globalNoteContents.add(id);
+        globalNoteContents.add(id + 1);
+        globalNoteContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(globalNoteGroup);
+
+        // when: I get global notes
+        List<Note> result = service.getGlobalNotes();
+
+        // then: i expect to see the the mock noteList passed back as retval
+        Assert.assertEquals("should return noteList", noteList, result);
+
+        // and: I expect to see the group contents passed to the noteDao
+        Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());
+        Set<Long> capturedIds = (Set<Long>) findIdsCaptor.getValue();
+        Assert.assertEquals("should pass mock group contents into dao", globalNoteContents, capturedIds);
+
+    }
+
+    @Test
+    public void noteService_getLocationNotes_shouldHappyPath() throws GroupException, NoteException {
+        // given: a mock response list
+        Long id = 1400L;
+        List<Note> noteList = new ArrayList<>();
+        noteList.add(TestDataFactory.makeNote(id, "Note A"));
+        noteList.add(TestDataFactory.makeNote(id + 1, "Note B"));
+        noteList.add(TestDataFactory.makeNote(id + 2, "Note C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(noteList);
+
+        // and: a group containing the IDs
+        Group locationNoteGroup = TestDataFactory.makeGroup();
+        Set<Long> locationNoteContents = locationNoteGroup.getContents();
+        locationNoteContents.add(id);
+        locationNoteContents.add(id + 1);
+        locationNoteContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(locationNoteGroup);
+
+        // and: a location;
+        Location location = TestDataFactory.makeLocation(5400L, "Test Location");
+
+        // when: I get global notes
+        List<Note> result = service.getLocationNotes(location);
+
+        // then: i expect to see the the mock noteList passed back as retval
+        Assert.assertEquals("should return noteList", noteList, result);
+
+        // and: I expect to see the group contents passed to the noteDao
+        Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());
+        Set<Long> capturedIds = (Set<Long>) findIdsCaptor.getValue();
+        Assert.assertEquals("should pass mock group contents into dao", locationNoteContents, capturedIds);
+    }
+
+    @Test(expected = NoteException.class)
+    public void noteService_getLocationNotes_shouldFailWhenLocationIdNotSet() throws GroupException, NoteException {
+        // given: a mock response list
+        Long id = 1400L;
+        List<Note> noteList = new ArrayList<>();
+        noteList.add(TestDataFactory.makeNote(id, "Note A"));
+        noteList.add(TestDataFactory.makeNote(id + 1, "Note B"));
+        noteList.add(TestDataFactory.makeNote(id + 2, "Note C"));
+
+        Mockito.when(mockDao.findAllById(Mockito.any())).thenReturn(noteList);
+
+        // and: a group containing the IDs
+        Group locationNoteGroup = TestDataFactory.makeGroup();
+        Set<Long> locationNoteContents = locationNoteGroup.getContents();
+        locationNoteContents.add(id);
+        locationNoteContents.add(id + 1);
+        locationNoteContents.add(id + 2);
+
+        Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(locationNoteGroup);
+
+        // and: a location;
+        Location location = TestDataFactory.makeLocation(null, "Test Location");
+
+        // when: I get global notes
+        try {
+            List<Note> result = service.getLocationNotes(location);
+
+            // then: I expect to fail
+            Assert.fail("should reject unsaved locations");
+        } catch (NoteException ex) {
+            throw ex;
+        } finally {
+
+            // and: I shouldn't see calls to the dao or groupServiced
+            Mockito.verify(mockDao, Mockito.never()).findAllById(Mockito.any());
+            Mockito.verify(mockGroupService, Mockito.never()).resolveSystemGroup(Mockito.anyString(), Mockito.any());
+        }
+    }
 }
