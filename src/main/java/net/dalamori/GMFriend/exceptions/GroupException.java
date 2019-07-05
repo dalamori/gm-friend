@@ -1,6 +1,6 @@
 package net.dalamori.GMFriend.exceptions;
 
-public class GroupException extends Exception {
+public class GroupException extends DmFriendGeneralServiceException {
     public GroupException(String description, Throwable ex){
         super(description,ex);
     }
