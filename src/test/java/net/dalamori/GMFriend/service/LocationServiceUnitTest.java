@@ -147,34 +147,173 @@ public class LocationServiceUnitTest {
 
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenIdSet() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenIdSet() throws LocationException {
+        // given: an origin and a destination for links to point to.
+        here.setId(54321L);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+
+        // and: some notes
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create location when id set");
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenInvalid() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenInvalid() throws LocationException {
+        // given: an invalid origin and a destination for links to point to.
+        here.setOwner("");
+        here.setId(null);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+
+        // and: some notes
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create invalid location");
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenNoteInvalid() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenNoteInvalid() throws LocationException {
+        // given: an unsaved origin and a destination for links to point to.
+        here.setId(null);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+
+        // and: some notes, onw of which is invalid...
+        noteB.setBody("");
+
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create location when an attached note is invalid");
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenNoteIdNotSet() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenNoteIdNotSet() throws LocationException {
+        // given: an unsaved origin and a destination for links to point to.
+        here.setId(null);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+
+        // and: some notes, one of which has no id.
+        noteB.setId(null);
+
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create location when attached note has no id");
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenLinkInvalid() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenLinkInvalid() throws LocationException {
+        // given: an unsaved origin and a destination for links to point to.
+        here.setId(null);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+        hereThereLink.setShortDescription("");
+
+        // and: some notes
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create location with invalid link");
     }
 
-    @Test
-    public void locationService_create_shouldFailWhenLinkDoesntOriginateHere() {
+    @Test(expected = LocationException.class)
+    public void locationService_create_shouldFailWhenLinkDoesntOriginateHere() throws LocationException {
+        // given: an unsaved origin and a destination for links to point to.
+        here.setId(null);
+        Mockito.when(mockDao.existsById(there.getId())).thenReturn(true);
 
+        // and: a link that points to said destination
+        here.getLinks().add(hereThereLink);
+        here.getLinks().add(thereHereLink);
+
+        // and: some notes
+        List<Note> notes = here.getNotes();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+
+        // and: some stubs to mimic the mocks' create patterns
+        Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any(LocationLink.class))).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to create the location
+        Location result = service.create(here);
+
+        // then: I should fail miserably
+        Assert.fail("should refuse to create location when link doesn't originate here");
     }
 
     @Test
