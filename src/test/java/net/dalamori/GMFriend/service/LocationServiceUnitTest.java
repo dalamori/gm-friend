@@ -806,12 +806,45 @@ public class LocationServiceUnitTest {
     }
 
     @Test
-    public void locationService_delete_shouldHappyPath() {
+    public void locationService_delete_shouldHappyPath() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.existsById(here.getId())).thenReturn(true);
+
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // when: I delete "here"
+        service.delete(here);
+
+        // then: I expect to see the notes unlinked
+        Mockito.verify(mockNoteService).detachFromLocation(noteA, here);
+        Mockito.verify(mockNoteService).detachFromLocation(noteB, here);
+
+        // and: the delete call to the dao (which will also cascade delete any links)
+        Mockito.verify(mockDao).deleteById(here.getId());
 
     }
 
-    @Test
-    public void locationService_delete_shouldFailWhenNotFound() {
+    @Test(expected = LocationException.class)
+    public void locationService_delete_shouldFailWhenNotFound() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.existsById(here.getId())).thenReturn(false);
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // when: I delete "here"
+        service.delete(here);
+
+        // then: I expect to fail
+        Assert.fail("should refuse to delete a location which does not exist");
     }
 }
