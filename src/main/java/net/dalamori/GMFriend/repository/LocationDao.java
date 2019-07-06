@@ -14,5 +14,5 @@ public interface LocationDao extends CrudRepository<Location, Long> {
 
     Optional<Location> findByName(String name);
 
-    List<Location> getAllByOwner(String owner);
+    List<Location> findAllByOwner(String owner);
 }

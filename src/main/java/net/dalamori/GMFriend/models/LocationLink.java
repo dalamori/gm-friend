@@ -2,6 +2,7 @@ package net.dalamori.GMFriend.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.ToString;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 
 import javax.persistence.Column;
@@ -32,12 +33,14 @@ public class LocationLink {
     @ManyToOne(targetEntity = Location.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "DEST")
     @JsonIgnoreProperties({"links", "notes"})
+    @ToString.Exclude
     private Location destination;
 
     @NotNull
     @ManyToOne(targetEntity = Location.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "ORIGIN")
     @JsonIgnoreProperties({"links", "notes"})
+    @ToString.Exclude
     private Location origin;
 
     @NotBlank
