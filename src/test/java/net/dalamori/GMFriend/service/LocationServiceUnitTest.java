@@ -557,34 +557,252 @@ public class LocationServiceUnitTest {
         Mockito.verify(mockLinkDao).save(hereFarLink);
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenIdNotSet() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenIdNotSet() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(null, "Here"); // invalid id
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(99L, "NoteC");
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
+        hereFarLink.setId(721L);
+        newHere.getLinks().add(hereFarLink);
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail with a LocationError
+        Assert.fail("Should refuse to update location when id not set.");
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenInvalid() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenInvalid() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(123L, "Here");
+        newHere.setOwner(""); // make location invalid
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(99L, "NoteC");
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
+        hereFarLink.setId(721L);
+        newHere.getLinks().add(hereFarLink);
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail
+        Assert.fail("should refuse to update an invalid location");
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenInvalidLink() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenInvalidLink() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(123L, "Here");
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(99L, "NoteC");
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
+        hereFarLink.setShortDescription(""); // make link invalid
+        hereFarLink.setId(721L);
+        newHere.getLinks().add(hereFarLink);
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail
+        Assert.fail("should refuse to update locations with invalid links");
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenInvalidNote() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenInvalidNote() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(123L, "Here");
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(99L, "NoteC");
+        noteC.setOwner(""); // make note invalid
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
+        hereFarLink.setId(721L);
+        newHere.getLinks().add(hereFarLink);
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail
+        Assert.fail("should refuse to update a link with an invalid note");
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenNoteIdNotSet() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenNoteIdNotSet() throws LocationException, NoteException {
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
 
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(123L, "Here");
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(null, "NoteC"); // null id
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
+        hereFarLink.setId(721L);
+        newHere.getLinks().add(hereFarLink);
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail
+        Assert.fail("should refuse to create a location with a unsaved note");
     }
 
-    @Test
-    public void locationService_update_shouldFailWhenLinkDoesntOriginateHere() {
+    @Test(expected = LocationException.class)
+    public void locationService_update_shouldFailWhenLinkDoesntOriginateHere() throws LocationException, NoteException {
 
+        // given: "here" is saved in the dao
+        Mockito.when(mockDao.findById(here.getId())).thenReturn(Optional.ofNullable(here));
+
+        // and: "here" has notes A and B saved in the noteService
+        List<Note> originalNotes = new ArrayList<>();
+        originalNotes.add(noteA);
+        originalNotes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
+        Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+
+        // and: "here" has a link to "there"
+        Set<LocationLink> originalLinks = new HashSet<>();
+        originalLinks.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(originalLinks);
+
+        // and: an updated version of "here" to save
+        Location newHere = TestDataFactory.makeLocation(123L, "Here");
+
+        // and: an updated list of notes
+        Note noteC = TestDataFactory.makeNote(99L, "NoteC");
+        newHere.getNotes().add(noteB);
+        newHere.getNotes().add(noteC);
+
+        // and: a different link
+        newHere.getLinks().add(thereHereLink); // doesn't originate here
+
+        // and: mock save functions that return retvals
+        Mockito.when(mockDao.save(Mockito.any())).thenAnswer(MOCK_LOCATION_SAVE);
+        Mockito.when(mockLinkDao.save(Mockito.any())).thenAnswer(MOCK_LINK_SAVE);
+
+        // when: I try to update here with newhere
+        Location result = service.update(newHere);
+
+        // then: I should fail
+        Assert.fail("should refuse to update locations with links that dont originate at that location");
     }
 
     @Test
