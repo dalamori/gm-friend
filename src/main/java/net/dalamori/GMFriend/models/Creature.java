@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,16 +26,20 @@ public class Creature {
     @Column(name = "ID", nullable = false)
     private Long id;
 
+    @NotBlank
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "PRIVACY_TYPE", nullable = false)
     private PrivacyType privacy;
 
+    @NotBlank
     @Column(name = "OWNER", nullable = false)
     private String owner;
 
+    @NotNull
     @Transient
     private Map<String, Property> propertyMap = new HashMap<>();
 
