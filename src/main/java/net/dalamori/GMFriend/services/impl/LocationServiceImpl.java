@@ -300,18 +300,6 @@ public class LocationServiceImpl implements LocationService {
     }
 
     private boolean validateLocationNotes(Location location) {
-        List<Note> notes = location.getNotes();
-        for (Note note : notes) {
-            // note must have an id
-            if (note.getId() == null) {
-                return false;
-            }
-
-            if (!noteService.exists(note.getId())) {
-                return false;
-            }
-        }
-
-        return true;
+        return noteService.validateNotes(location);
     }
 }

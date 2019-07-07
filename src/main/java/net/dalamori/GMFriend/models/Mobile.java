@@ -2,6 +2,8 @@ package net.dalamori.GMFriend.models;
 
 import lombok.Data;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
+import net.dalamori.GMFriend.models.interfaces.HasOwner;
+import net.dalamori.GMFriend.models.interfaces.HasProperties;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -22,7 +25,7 @@ import java.util.Map;
 @Entity
 @Table(name = "MOBILES")
 @Data
-public class Mobile {
+public class Mobile implements HasOwner, HasProperties {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -63,7 +66,7 @@ public class Mobile {
     @Column(name = "POSITION", nullable = false)
     private String position;
 
-    @NotNull
+    @Valid
     @Transient
     private Map<String, Property> propertyMap = new HashMap<>();
 }

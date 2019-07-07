@@ -10,6 +10,7 @@ import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.interfaces.HasNotes;
 import net.dalamori.GMFriend.repository.NoteDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.NoteService;
@@ -291,6 +292,23 @@ public class NoteServiceImpl implements NoteService {
         } catch (GroupException ex) {
             throw new NoteException("Unable to retrieve Location Notes", ex);
         }
+    }
+
+    @Override
+    public boolean validateNotes(HasNotes subject) {
+        List<Note> notes = subject.getNotes();
+        for (Note note : notes) {
+            // note must have an id
+            if (note.getId() == null) {
+                return false;
+            }
+
+            if (!noteDao.existsById(note.getId())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private Group resolveLocationNoteGroup(Location location) throws GroupException, NoteException {
