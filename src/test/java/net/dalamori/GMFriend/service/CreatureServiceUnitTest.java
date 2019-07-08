@@ -4,6 +4,7 @@ import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.CreatureException;
 import net.dalamori.GMFriend.exceptions.PropertyException;
 import net.dalamori.GMFriend.models.Creature;
+import net.dalamori.GMFriend.models.Mobile;
 import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.repository.CreatureDao;
@@ -17,6 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -41,6 +44,8 @@ public class CreatureServiceUnitTest {
     @Mock private CreatureDao mockDao;
     @Mock private PropertyService mockPropertyService;
 
+    @Captor private ArgumentCaptor<Creature> creatureCaptor;
+
     private CreatureService service;
 
     private Creature steve;
@@ -58,8 +63,16 @@ public class CreatureServiceUnitTest {
         @Override
         public Property answer(InvocationOnMock invocation) throws Throwable {
             Property property = invocation.getArgument(0);
+            Property clone = new Property();
 
-            return TestDataFactory.makeProperty(property.getId(), property.getName());
+            clone.setName(property.getName());
+            clone.setOwner(property.getOwner());
+            clone.setPrivacy(property.getPrivacy());
+            clone.setType(property.getType());
+            clone.setValue(property.getValue());
+            clone.setId(property.getId());
+
+            return clone;
         }
     };
 
@@ -515,32 +528,165 @@ public class CreatureServiceUnitTest {
     }
 
     @Test
-    public void creatureService_fromMobile_shouldHappyPath() {
+    public void creatureService_fromMobile_shouldHappyPath() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
+
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I expect to get savedSteve as my retval
+        Assert.assertEquals("should return savedSteve", savedSteve, result);
+
+        // and: he should have three properties, 2 from original, and 1 to hold maxHP
+        Assert.assertEquals("should have 3 properties", 3, result.getPropertyMap().size());
+        Assert.assertEquals("should contain propA", propA, result.getPropertyMap().get("A"));
+        Assert.assertEquals("should contain propA", propB, result.getPropertyMap().get("B"));
+
+        String maxHpPropName = config.getCreaturePropertyMaxHpName();
+        Assert.assertEquals("should have maxHp property", "64", result.getPropertyMap().get(maxHpPropName).getValue());
+
+        // and: the values passed to dao should match the mobile
+        Mockito.verify(mockDao).save(creatureCaptor.capture());
+
+        Creature argument = creatureCaptor.getValue();
+        Assert.assertEquals("should save creature with correct name", pattern.getName(), argument.getName());
+        Assert.assertEquals("should save creature with correct owner", pattern.getOwner(), argument.getOwner());
+        Assert.assertEquals("should save creature with correct privacy", pattern.getPrivacy(), argument.getPrivacy());
 
     }
 
-    @Test
-    public void creatureService_fromMobile_shouldFailWhenMobileIdNotSet() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_fromMobile_shouldFailWhenMobileIdNotSet() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
 
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+
+        // and: mobile Id is not set
+        pattern.setId(null);
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I should fail
+        Assert.fail("should refuse to convert a mobile which has no id set");
     }
 
-    @Test
-    public void creatureService_fromMobile_shouldFailIfNameWouldCollide() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_fromMobile_shouldFailIfNameWouldCollide() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
 
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+
+        // and: the name appears to already exist in the dao
+        Mockito.when(mockDao.existsByName("fred")).thenReturn(true);
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I should fail
+        Assert.fail("should refuse to convert a mobile whose name would collide");
     }
 
-    @Test
-    public void creatureService_fromMobile_shouldFailIfMobileInvalid() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_fromMobile_shouldFailIfMobileInvalid() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
 
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+
+        // and: mobile is invalid somehow
+        pattern.setPosition("");
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I should fail
+        Assert.fail("should refuse to convert a mobile which fails java bean validation");
     }
 
-    @Test
-    public void creatureService_fromMobile_shouldFailWhenInvalidProperty() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_fromMobile_shouldFailWhenInvalidProperty() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
 
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+
+        // and: one of the mobile's properties is invalid somehow
+        propA.setValue("");
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I should fail
+        Assert.fail("should refuse to convert a mobile with a property which fails java bean validation");
     }
 
-    @Test
-    public void creatureService_fromMobile_shouldFailWhenInvalidPropertyMapping() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_fromMobile_shouldFailWhenInvalidPropertyMapping() throws CreatureException, PropertyException {
+        // given: a pattern Mobile
+        Mobile pattern = TestDataFactory.makeMobile(1337L, "fred");
 
+        pattern.getPropertyMap().put("A", propA);
+        pattern.getPropertyMap().put("B", propB);
+        pattern.setMaxHp(64);
+
+        // and: some mocks to handle return values
+        Mockito.when(mockPropertyService.copy(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+
+        // and: the mapping validation is set to fail
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(false);
+
+        // when: I convert a mobile
+        Creature result = service.fromMobile(pattern);
+
+        // then: I should fail
+        Assert.fail("should refuse to convert a mobile with a property which fails property mapping validation");
     }
 }
