@@ -4,10 +4,13 @@ import net.dalamori.GMFriend.exceptions.PropertyException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Mobile;
 import net.dalamori.GMFriend.models.Property;
+import net.dalamori.GMFriend.models.interfaces.HasProperties;
 
 import java.util.List;
 
 public interface PropertyService {
+    Property copy(Property property) throws PropertyException;
+
     Property create(Property property) throws PropertyException;
 
     Property read(Long id) throws PropertyException;
@@ -35,5 +38,7 @@ public interface PropertyService {
     List<Property> getCreatureProperties(Creature creature) throws PropertyException;
 
     List<Property> getMobileProperties(Mobile mobile) throws PropertyException;
+
+    boolean validatePropertyMapNames(HasProperties subject);
 
 }

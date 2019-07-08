@@ -10,6 +10,7 @@ import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.models.Mobile;
 import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.interfaces.HasProperties;
 import net.dalamori.GMFriend.repository.PropertyDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.PropertyService;
@@ -22,7 +23,9 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,6 +45,20 @@ public class PropertyServiceImpl implements PropertyService {
     private DmFriendConfig config;
 
     private static final ValidatorFactory VALIDATOR_FACTORY = Validation.buildDefaultValidatorFactory();
+
+    @Override
+    public Property copy(Property property) throws PropertyException {
+        // create will do all our validation for us...
+        Property clone = new Property();
+
+        clone.setName(property.getName());
+        clone.setOwner(property.getOwner());
+        clone.setPrivacy(property.getPrivacy());
+        clone.setType(property.getType());
+        clone.setValue(property.getValue());
+
+        return create(clone);
+    }
 
     @Override
     public Property create(Property property) throws PropertyException {
@@ -323,6 +340,22 @@ public class PropertyServiceImpl implements PropertyService {
         } catch (GroupException ex) {
             throw new PropertyException("Unable to retrieve creature properties", ex);
         }
+    }
+
+    @Override
+    public boolean validatePropertyMapNames(HasProperties subject) {
+        Map<String, Property> propertyMap = subject.getPropertyMap();
+        Iterator<String> keys = propertyMap.keySet().iterator();
+
+        while(keys.hasNext()) {
+            String key = keys.next();
+
+            if (propertyMap.get(key).getName() != key) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private Group resolveGlobalPropertiesGroup() throws GroupException {

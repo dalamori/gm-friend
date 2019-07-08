@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.services;
 import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.Note;
+import net.dalamori.GMFriend.models.interfaces.HasNotes;
 
 import java.util.List;
 
@@ -31,5 +32,6 @@ public interface NoteService {
 
     List<Note> getLocationNotes(Location location) throws NoteException;
 
+    boolean validateNotes(HasNotes subject);
 
 }

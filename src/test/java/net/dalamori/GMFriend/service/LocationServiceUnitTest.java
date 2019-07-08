@@ -126,6 +126,7 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -172,6 +173,7 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -200,6 +202,7 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -229,6 +232,8 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        // This test covers java bean validation; Do not confuse next line, which covers custom note validation, and is a seperate test
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -250,8 +255,8 @@ public class LocationServiceUnitTest {
         // and: a link that points to said destination
         here.getLinks().add(hereThereLink);
 
-        // and: some notes, one of which has no id.
-        noteB.setId(null);
+        // and: set the custom note validator to return false.
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(false);
 
         List<Note> notes = here.getNotes();
         notes.add(noteA);
@@ -286,6 +291,7 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -314,6 +320,7 @@ public class LocationServiceUnitTest {
         notes.add(noteB);
         Mockito.when(mockNoteService.exists(noteA.getId())).thenReturn(true);
         Mockito.when(mockNoteService.exists(noteB.getId())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: some stubs to mimic the mocks' create patterns
         Mockito.when(mockDao.save(Mockito.any(Location.class))).thenAnswer(MOCK_LOCATION_SAVE);
@@ -507,6 +514,7 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();
@@ -568,6 +576,7 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();
@@ -609,6 +618,7 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();
@@ -651,6 +661,7 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();
@@ -693,6 +704,8 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        // This test is for java bean validation, don't be confused by this name on the next line, its unrelated.
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();
@@ -749,6 +762,9 @@ public class LocationServiceUnitTest {
         newHere.getNotes().add(noteB);
         newHere.getNotes().add(noteC);
 
+        // and: we set our custom validation to say false
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(false);
+
         // and: a different link
         LocationLink hereFarLink = TestDataFactory.makeLink(newHere, farAway);
         hereFarLink.setId(721L);
@@ -777,6 +793,7 @@ public class LocationServiceUnitTest {
         originalNotes.add(noteB);
         Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(originalNotes);
         Mockito.when(mockNoteService.exists(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(mockNoteService.validateNotes(Mockito.any())).thenReturn(true);
 
         // and: "here" has a link to "there"
         Set<LocationLink> originalLinks = new HashSet<>();

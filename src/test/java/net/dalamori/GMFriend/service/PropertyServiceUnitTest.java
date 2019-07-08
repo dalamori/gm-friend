@@ -74,6 +74,25 @@ public class PropertyServiceUnitTest {
     }
 
     @Test
+    public void propertyService_copy_shouldHappyPath() throws PropertyException {
+        // given: a sample property to return from mock dao
+        property.setId(444L);
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedProperty);
+
+        // when: I create the property
+        Property result = service.copy(property);
+
+        // then: I expect to see the correct return value
+        Assert.assertEquals("got correct return value", savedProperty, result);
+
+        // and: I expect to the right calls to the dao, we should save a copy of property without id, not property itself
+        Mockito.verify(mockDao, Mockito.never()).save(property);
+
+        property.setId(null);
+        Mockito.verify(mockDao).save(Mockito.eq(property));
+    }
+
+    @Test
     public void propertyService_create_shouldHappyPath() throws PropertyException {
         // given: a sample property to return from mock dao
         Mockito.when(mockDao.save(property)).thenReturn(savedProperty);

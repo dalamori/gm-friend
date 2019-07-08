@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.models;
 import lombok.Data;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.interfaces.HasOwner;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,7 +19,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity
 @Table(name = "PROPERTIES")
-public class Property {
+public class Property implements HasOwner {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

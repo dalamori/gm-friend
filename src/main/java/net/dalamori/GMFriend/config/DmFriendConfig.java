@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
 
+import javax.validation.Valid;
+
 @Data
 @Configuration
 @PropertySources(value = {
@@ -13,6 +15,9 @@ import org.springframework.context.annotation.PropertySources;
         @PropertySource(value = "classpath:interpreter.properties", ignoreResourceNotFound = true)
 })
 public class DmFriendConfig {
+
+    @Value("${creatures.properties.maxHpName:maxHp}")
+    private String creaturePropertyMaxHpName;
 
     @Value("${groups.system.collisionPrefix:__LOST+FOUND=}")
     private String systemGroupCollisionPrefix;
@@ -38,4 +43,9 @@ public class DmFriendConfig {
     @Value("${groups.system.prefix:__SYS__}")
     private String systemGroupPrefix;
 
+    @Value("${mobiles.name.maxRetries:50}")
+    private int mobileNameMaxRetries;
+
 }
+
+

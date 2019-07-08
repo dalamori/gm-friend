@@ -2,6 +2,7 @@ package net.dalamori.GMFriend.models;
 
 import lombok.Data;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
+import net.dalamori.GMFriend.models.interfaces.HasNotes;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,7 +22,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "LOCATIONS")
-public class Location {
+public class Location implements HasNotes {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

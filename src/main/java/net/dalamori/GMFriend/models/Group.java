@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.models;
 import lombok.Data;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.interfaces.HasOwner;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -24,7 +25,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "GROUP_LISTS")
-public class Group {
+public class Group implements HasOwner {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "ID", nullable = false)
