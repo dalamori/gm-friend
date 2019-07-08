@@ -165,23 +165,28 @@ public class CreatureServiceImpl implements CreatureService {
 
     @Override
     public Creature update(Creature creature) throws CreatureException {
-        if (creature.getId() != null) {
-            log.debug("CreatureServiceImpl::create asked to create a creature which already has an id");
-            throw new CreatureException("asked to create creature which already has id");
+        if (creature.getId() == null) {
+            log.debug("CreatureServiceImpl::update asked to create a creature which has null id");
+            throw new CreatureException("asked to update creature which has no id");
+        }
+
+        if (!creatureDao.existsById(creature.getId())) {
+            log.debug("CreatureServiceImpl::update creature with id # {} not found", creature.getId());
+            throw new CreatureException("asked to update creature which is not found");
         }
 
         Validator validator = VALIDATOR_FACTORY.getValidator();
         Set<ConstraintViolation<Creature>> violations = validator.validate(creature);
         if (violations.size() > 0) {
             for (ConstraintViolation<Creature> violation : violations) {
-                log.debug("CreatureServiceImpl::create validation violation for creature {} : {}", creature, violation.getMessage());
+                log.debug("CreatureServiceImpl::update validation violation for creature {} : {}", creature, violation.getMessage());
             }
 
-            throw new CreatureException("asked to create invalid creature");
+            throw new CreatureException("asked to update invalid creature");
         }
 
         if (!propertyService.validatePropertyMapNames(creature)) {
-            log.debug("CreatureServiceImpl::create propertyMap validation for creature {}", creature);
+            log.debug("CreatureServiceImpl::update propertyMap validation for creature {}", creature);
             throw new CreatureException("propertyMap validation failed");
         }
 

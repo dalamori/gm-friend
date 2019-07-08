@@ -5,6 +5,7 @@ import net.dalamori.GMFriend.exceptions.CreatureException;
 import net.dalamori.GMFriend.exceptions.PropertyException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Property;
+import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.repository.CreatureDao;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.services.PropertyService;
@@ -314,38 +315,203 @@ public class CreatureServiceUnitTest {
     }
 
     @Test
-    public void creatureService_update_shouldHappyPath() {
+    public void creatureService_update_shouldHappyPath() throws CreatureException, PropertyException {
+        // given: an updated copy of steve
+        steve.setId(STEVE_ID);
+        steve.setPrivacy(PrivacyType.PUBLIC);
+        steve.getPropertyMap().put("B", propB );
+        steve.getPropertyMap().put("C", propC );
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
+
+        // and: a list of steve's original properties
+        List<Property> originalProperties = new ArrayList<>();
+        originalProperties.add(propA);
+        originalProperties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(steve)).thenReturn(originalProperties);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.update(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+
+        // when: I update steve
+        Creature result = service.update(steve);
+
+        // then: I expect to get a copy of savedSteve back
+        Assert.assertEquals("should return savedSteve", savedSteve, result);
+        Mockito.verify(mockDao).save(steve);
+
+        // and he should have the right properties, creating there needed
+        Assert.assertEquals("should have 2 properties", 2, result.getPropertyMap().size());
+        Assert.assertEquals("should have prop B", propB, result.getPropertyMap().get("B"));
+        Assert.assertEquals("should have prop C", propC, result.getPropertyMap().get("C"));
+
+        Mockito.verify(mockPropertyService).detachFromCreature(propA, savedSteve);
+        Mockito.verify(mockPropertyService).attachToCreature(propC, savedSteve);
+
+        Mockito.verify(mockPropertyService, Mockito.never()).detachFromCreature(propB, savedSteve);
+        Mockito.verify(mockPropertyService, Mockito.never()).attachToCreature(propB, savedSteve);
+
+        Mockito.verify(mockPropertyService).create(propC);
 
     }
 
-    @Test
-    public void creatureService_update_shouldFailWhenIdNotSet() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_update_shouldFailWhenIdNotSet() throws CreatureException, PropertyException {
+        // given: an updated copy of steve
+        steve.setPrivacy(PrivacyType.PUBLIC);
+        steve.getPropertyMap().put("B", propB );
+        steve.getPropertyMap().put("C", propC );
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
 
+        // and: a list of steve's original properties
+        List<Property> originalProperties = new ArrayList<>();
+        originalProperties.add(propA);
+        originalProperties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(steve)).thenReturn(originalProperties);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.update(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+
+        // and: creature ID is not set
+        steve.setId(null);
+
+        // when: I update steve
+        Creature result = service.update(steve);
+
+        // then: I expect to fail
+        Assert.fail("Should refuse to update a creature whose id is not set");
+    }
+
+    @Test(expected = CreatureException.class)
+    public void creatureService_update_shouldFailWhenInvalid() throws CreatureException, PropertyException {
+        // given: an updated copy of steve
+        steve.setPrivacy(PrivacyType.PUBLIC);
+        steve.getPropertyMap().put("B", propB );
+        steve.getPropertyMap().put("C", propC );
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
+
+        // and: a list of steve's original properties
+        List<Property> originalProperties = new ArrayList<>();
+        originalProperties.add(propA);
+        originalProperties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(steve)).thenReturn(originalProperties);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.update(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+
+        // and: creature is somehow invalid
+        steve.setOwner(null);
+
+        // when: I update steve
+        Creature result = service.update(steve);
+
+        // then: I expect to fail
+        Assert.fail("Should refuse to update a creature whose id is not set");
+    }
+
+    @Test(expected = CreatureException.class)
+    public void creatureService_update_shouldFailWhenPropertyInvalid() throws CreatureException, PropertyException {
+        // given: an updated copy of steve
+        steve.setPrivacy(PrivacyType.PUBLIC);
+        steve.getPropertyMap().put("B", propB );
+        steve.getPropertyMap().put("C", propC );
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
+
+        // and: a list of steve's original properties
+        List<Property> originalProperties = new ArrayList<>();
+        originalProperties.add(propA);
+        originalProperties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(steve)).thenReturn(originalProperties);
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(true);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.update(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+
+        // and: a property fails java bean validation
+        propB.setValue(null);
+
+        // when: I update steve
+        Creature result = service.update(steve);
+
+        // then: I expect to fail
+        Assert.fail("Should refuse to update a creature with an invalid property");
+    }
+
+    @Test(expected = CreatureException.class)
+    public void creatureService_update_shouldFailWhenPropertyMappingInvalid() throws CreatureException, PropertyException {
+        // given: an updated copy of steve
+        steve.setPrivacy(PrivacyType.PUBLIC);
+        steve.getPropertyMap().put("B", propB );
+        steve.getPropertyMap().put("C", propC );
+        Mockito.when(mockDao.save(Mockito.any())).thenReturn(savedSteve);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
+
+        // and: a list of steve's original properties
+        List<Property> originalProperties = new ArrayList<>();
+        originalProperties.add(propA);
+        originalProperties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(steve)).thenReturn(originalProperties);
+        Mockito.when(mockPropertyService.create(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+        Mockito.when(mockPropertyService.update(Mockito.any())).thenAnswer(MOCK_PROPERTY_SAVE);
+
+        // and: the mapping validation is set to fail
+        Mockito.when(mockPropertyService.validatePropertyMapNames(Mockito.any())).thenReturn(false);
+
+        // when: I update steve
+        Creature result = service.update(steve);
+
+        // then: I expect to fail
+        Assert.fail("Should refuse to update a creature whose id is not set");
     }
 
     @Test
-    public void creatureService_update_shouldFailWhenInvalid() {
+    public void creatureService_delete_shouldHappyPath() throws CreatureException {
+        // given: Steve appears to be saved in the database
+        steve.setId(STEVE_ID);
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
 
+        // and: steve appears to have properties saved
+        List<Property> properties = new ArrayList<>();
+        properties.add(propA);
+        properties.add(propB);
+
+        // when: I try to delete
+        service.delete(steve);
+
+        // then: I should succeed;
+        Mockito.verify(mockDao).deleteById(STEVE_ID);
     }
 
-    @Test
-    public void creatureService_update_shouldFailWhenPropertyInvalid() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_delete_shouldFailWhenIdNotSet() throws CreatureException {
+        // given: Steve appears to be saved in the database
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
 
+        // and: id is not set
+        steve.setId(null);
+
+        // when: I try to delete
+        service.delete(steve);
+
+        // then: I should fail
+        Assert.fail("should refuse to delete a creature with unset id");
     }
 
-    @Test
-    public void creatureService_update_shouldFailWhenPropertyMappingInvalid() {
+    @Test(expected = CreatureException.class)
+    public void creatureService_delete_shouldFailWhenNotFound() throws CreatureException {
+        // given: Steve has an id set
+        steve.setId(STEVE_ID);
 
-    }
+        // and: the dao reports it doesn't exist
+        Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(false);
 
-    @Test
-    public void creatureService_delete_shouldHappyPath() {
+        // when: I try to delete
+        service.delete(steve);
 
-    }
-
-    @Test
-    public void creatureService_delete_shouldFailWhenNotFound() {
-
+        // then: I should fail
+        Assert.fail("should refuse to delete a creature which doesn't exist");
     }
 
     @Test
