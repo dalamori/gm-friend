@@ -14,6 +14,7 @@ import net.dalamori.GMFriend.services.MobileService;
 import net.dalamori.GMFriend.services.PropertyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -29,6 +30,7 @@ import java.util.Set;
 @Slf4j
 @Data
 @Service("mobileService")
+@Transactional(rollbackFor = MobileException.class)
 public class MobileServiceImpl implements MobileService {
 
     @Autowired
@@ -263,11 +265,6 @@ public class MobileServiceImpl implements MobileService {
             throw new MobileException("can't convert unsaved creature");
         }
 
-        if (mobileDao.existsByName(creature.getName())) {
-            log.debug("MobileServiceImpl::fromCreature mobile with name {} already exists", creature.getName());
-            throw new MobileException("cant convert creature due to mobile name collision");
-        }
-
         Validator validator = VALIDATOR_FACTORY.getValidator();
         Set<ConstraintViolation<Creature>> violations = validator.validate(creature);
         if (violations.size() > 0) {
@@ -320,15 +317,6 @@ public class MobileServiceImpl implements MobileService {
         }
 
         return savedMobile;
-    }
-
-    @Override
-    public Mobile fromCreature(String name) throws MobileException {
-        return null;
-    }
-
-    public List<Mobile> fromCreatureList(String groupName) throws MobileException {
-        return null;
     }
 
     private String resolveMobName(String name) throws MobileException {

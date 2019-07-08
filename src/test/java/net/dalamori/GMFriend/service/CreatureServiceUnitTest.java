@@ -57,7 +57,6 @@ public class CreatureServiceUnitTest {
     private static final Long STEVE_ID = 42L;
     private static final Long PROP_A_ID = 123L;
     private static final Long PROP_B_ID = 124L;
-    private static final Long PROP_C_ID = 125L;
 
     private static final Answer<Property> MOCK_PROPERTY_SAVE = new Answer<Property>() {
         @Override
