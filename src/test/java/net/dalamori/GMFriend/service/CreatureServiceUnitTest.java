@@ -480,7 +480,7 @@ public class CreatureServiceUnitTest {
     }
 
     @Test
-    public void creatureService_delete_shouldHappyPath() throws CreatureException {
+    public void creatureService_delete_shouldHappyPath() throws CreatureException, PropertyException {
         // given: Steve appears to be saved in the database
         steve.setId(STEVE_ID);
         Mockito.when(mockDao.existsById(STEVE_ID)).thenReturn(true);
@@ -489,12 +489,17 @@ public class CreatureServiceUnitTest {
         List<Property> properties = new ArrayList<>();
         properties.add(propA);
         properties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(Mockito.any())).thenReturn(properties);
 
         // when: I try to delete
         service.delete(steve);
 
         // then: I should succeed;
         Mockito.verify(mockDao).deleteById(STEVE_ID);
+
+        // and: we should see the properties unlinked.
+        Mockito.verify(mockPropertyService).detachFromCreature(propA, steve);
+        Mockito.verify(mockPropertyService).detachFromCreature(propB, steve);
     }
 
     @Test(expected = CreatureException.class)

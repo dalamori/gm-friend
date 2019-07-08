@@ -229,7 +229,7 @@ public class CreatureServiceImpl implements CreatureService {
 
         } catch(PropertyException ex) {
             log.debug("CreatureServiceImpl::update failed to sync properties");
-            throw new CreatureException("failed to sync properties");
+            throw new CreatureException("failed to sync properties", ex);
         }
 
         return savedCreature;
@@ -245,6 +245,16 @@ public class CreatureServiceImpl implements CreatureService {
         if (!creatureDao.existsById(creature.getId())) {
             log.debug("CreatureServiceImpl::delete creature not found");
             throw new CreatureException("creature not found");
+        }
+
+        try {
+            List<Property> properties = propertyService.getCreatureProperties(creature);
+            for (Property property : properties) {
+                propertyService.detachFromCreature(property, creature);
+            }
+        } catch (PropertyException ex) {
+            log.debug("CreatureServiceImpl::delete unable to unlink creature properties");
+            throw new CreatureException("failed to unlink creature properties", ex);
         }
 
         creatureDao.deleteById(creature.getId());

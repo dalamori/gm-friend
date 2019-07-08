@@ -4,6 +4,8 @@ import net.dalamori.GMFriend.exceptions.MobileException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Mobile;
 
+import java.util.List;
+
 public interface MobileService {
 
     Mobile create(Mobile mobile) throws MobileException;
@@ -20,5 +22,6 @@ public interface MobileService {
 
     Mobile fromCreature(Creature creature) throws MobileException;
     Mobile fromCreature(String name) throws MobileException;
+    List<Mobile> fromCreatureList(String groupName) throws MobileException;
 
 }

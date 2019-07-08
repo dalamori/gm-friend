@@ -50,21 +50,21 @@ public class Mobile implements HasOwner, HasProperties {
 
     @Positive
     @Column(name = "MAX_HP", nullable = false)
-    private long maxHp;
+    private long maxHp = 1;
 
     @Column(name = "HP", nullable = false)
-    private long hp;
+    private long hp = 1;
 
     @PositiveOrZero
     @Column(name = "INITIATIVE", nullable = false)
-    private int initiative;
+    private int initiative =  9999;
 
     @Column(name = "ALIVE", nullable = false)
-    private boolean alive;
+    private boolean alive = true;
 
     @NotBlank
     @Column(name = "POSITION", nullable = false)
-    private String position;
+    private String position = "here";
 
     @Valid
     @Transient
