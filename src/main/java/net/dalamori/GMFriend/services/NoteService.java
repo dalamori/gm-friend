@@ -7,7 +7,7 @@ import net.dalamori.GMFriend.models.interfaces.HasNotes;
 
 import java.util.List;
 
-public interface NoteService {
+public interface NoteService extends SimpleCrudeService<Note> {
     Note create(Note note) throws NoteException;
 
     Note read(Long id) throws NoteException;

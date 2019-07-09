@@ -2,24 +2,29 @@ package net.dalamori.GMFriend.interpreter;
 
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 
-import java.util.Arrays;
-import java.util.List;
-
 public abstract class AbstractCommand {
 
     public abstract void handle(CommandContext context) throws InterpreterException;
 
-    /* TODO: this is in the wrong place, find a better spot for it ... */
-    public void interpret(String commandString, String requestor) throws InterpreterException {
-        List<String> command = Arrays.asList(commandString.split("\\s+"));
+    public String getCurrentCommandPart(CommandContext context) {
+        String cmdPart = null;
+        if (context.getIndex() < context.getCommand().size()) {
+            cmdPart = context.getCommand().get(context.getIndex());
+        }
 
-        CommandContext context = new CommandContext();
-        context.setCommand(command);
-        context.setIndex(0);
-        context.setOwner(requestor);
-
-        handle(context);
-
+        return cmdPart;
     }
 
+    public String getRemainingCommand(CommandContext context) {
+        String remaining = "";
+
+        if (context.getIndex() < context.getCommand().size()) {
+            remaining = String.join(" ",
+                    context.getCommand().subList(context.getIndex(), context.getCommand().size())
+            );
+        }
+
+        return remaining;
+    }
 }
+

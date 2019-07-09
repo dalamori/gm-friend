@@ -1,13 +1,22 @@
 package net.dalamori.GMFriend.config;
 
 import lombok.Data;
+import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.interpreter.AbstractCommand;
+import net.dalamori.GMFriend.interpreter.CommandContext;
+import net.dalamori.GMFriend.interpreter.CreateCommand;
+import net.dalamori.GMFriend.interpreter.DisplayCommand;
 import net.dalamori.GMFriend.interpreter.InfoCommand;
 import net.dalamori.GMFriend.interpreter.MapCommand;
+import net.dalamori.GMFriend.interpreter.PrettyPrinter;
+import net.dalamori.GMFriend.models.Note;
+import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.services.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Data
 @Configuration
@@ -53,9 +62,48 @@ public class InterpreterConfig {
                 "* note help - show this message\n" +
                 "\n\r";
 
+        // HELP
         noteInfo.setInfo(noteHelp);
-
         noteHandler.setDefaultAction(noteInfo);
+
+        // SHOW
+        DisplayCommand<Note> show = new DisplayCommand<>();
+        show.setPrinter(PrettyPrinter.getNotePrinter());
+        show.setService(noteService);
+        noteHandler.getMap().put("show", show);
+
+        // LIST
+        DisplayCommand<Iterable<Note>> list = new DisplayCommand<Iterable<Note>>() {
+            @Override
+            public List<Note> getItem(CommandContext context) throws NoteException {
+                return noteService.getGlobalNotes();
+            }
+        };
+        list.setPrinter(PrettyPrinter.getNoteListPrinter());
+        noteHandler.getMap().put("list", list);
+
+        // NEW
+        CreateCommand<Note> create = new CreateCommand<Note>() {
+            @Override
+            public Note buildItem(CommandContext context) {
+                Note note = new Note();
+                note.setOwner(context.getOwner());
+                note.setPrivacy(PrivacyType.NORMAL);
+                note.setTitle(getCurrentCommandPart(context));
+                note.setBody(getRemainingCommand(context));
+
+                return note;
+            }
+
+            @Override
+            public void afterSave(Note note) throws NoteException {
+                noteService.attachToGlobalContext(note);
+            }
+        };
+        create.setService(noteService);
+        create.setPrinter(PrettyPrinter.getNotePrinter());
+        noteHandler.getMap().put("new", create);
+        noteHandler.getMap().put("create", create);
 
         return noteHandler;
     }

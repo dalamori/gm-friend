@@ -19,19 +19,11 @@ public class MapCommand extends AbstractCommand {
 
     @Override
     public void handle(CommandContext context) throws InterpreterException {
-        List<String> command = context.getCommand();
-        int atIndex = context.getIndex();
-
-        // make sure we have something to interpret
-        if (atIndex >= command.size()) {
-            tryDefault(context);
-            return;
-        }
+        String commandPart = getCurrentCommandPart(context);
 
         // try to follow map
-        String commandPart = command.get(atIndex);
         if (map.containsKey(commandPart)) {
-            context.setIndex(atIndex + 1);
+            context.setIndex(context.getIndex() + 1);
             map.get(commandPart).handle(context);
 
             return;
