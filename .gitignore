@@ -2,9 +2,9 @@ HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
-!src/main/resources/secrets.properties
 !**/src/main/**
 !**/src/test/**
+secrets.properties
 
 ### STS ###
 .apt_generated
