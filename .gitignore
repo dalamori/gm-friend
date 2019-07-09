@@ -2,7 +2,7 @@ HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
-secrets.properties
+!src/main/resources/secrets.properties
 !**/src/main/**
 !**/src/test/**
 

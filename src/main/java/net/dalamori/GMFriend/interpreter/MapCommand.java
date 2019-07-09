@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper=false)
 public class MapCommand extends AbstractCommand {
 
-    private Map<String, AbstractCommand> map;
+    private Map<String, AbstractCommand> map = new HashMap<>();
     private AbstractCommand defaultAction;
 
     @Override
