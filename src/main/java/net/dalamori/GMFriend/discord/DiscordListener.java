@@ -39,6 +39,7 @@ public class DiscordListener extends ListenerAdapter {
             }
 
         } catch (InterpreterException ex) {
+            event.getChannel().sendMessage("Error Received, and not caught!: " + ex.getMessage() ).queue();
             log.debug("DiscordListener::onMessageReceived got an error parsing the command: {}",
                     event.getMessage().getContentRaw(), ex);
         }
