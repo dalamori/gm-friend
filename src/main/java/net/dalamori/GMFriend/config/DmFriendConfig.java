@@ -43,6 +43,9 @@ public class DmFriendConfig {
     @Value("${groups.system.prefix:__SYS__}")
     private String systemGroupPrefix;
 
+    @Value("${interpreter.commandPrefix:;;}")
+    private String interpreterCommandPrefix;
+
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
 

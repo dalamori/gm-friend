@@ -25,6 +25,7 @@ public class MapCommand extends AbstractCommand {
         // make sure we have something to interpret
         if (atIndex >= command.size()) {
             tryDefault(context);
+            return;
         }
 
         // try to follow map
