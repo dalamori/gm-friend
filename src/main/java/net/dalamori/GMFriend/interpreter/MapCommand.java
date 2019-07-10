@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Data

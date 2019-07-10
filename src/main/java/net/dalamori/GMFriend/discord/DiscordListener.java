@@ -26,7 +26,7 @@ public class DiscordListener extends ListenerAdapter {
             return;
         }
 
-        context.setOwner(event.getAuthor().getName());
+        context.setOwner(event.getAuthor().getAsTag());
 
         context.setCommand(Arrays.asList(event.getMessage().getContentRaw().split("\\s")));
         context.setIndex(0);

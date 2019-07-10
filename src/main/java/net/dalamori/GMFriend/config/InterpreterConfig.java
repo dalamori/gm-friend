@@ -5,10 +5,12 @@ import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.interpreter.AbstractCommand;
 import net.dalamori.GMFriend.interpreter.CommandContext;
 import net.dalamori.GMFriend.interpreter.CreateCommand;
+import net.dalamori.GMFriend.interpreter.DeleteCommand;
 import net.dalamori.GMFriend.interpreter.DisplayCommand;
 import net.dalamori.GMFriend.interpreter.InfoCommand;
 import net.dalamori.GMFriend.interpreter.MapCommand;
 import net.dalamori.GMFriend.interpreter.PrettyPrinter;
+import net.dalamori.GMFriend.interpreter.UpdateCommand;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.services.NoteService;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Configuration
@@ -30,21 +33,35 @@ public class InterpreterConfig {
 
     private AbstractCommand rootCommand;
 
+    /* Root Command Menu */
+    private MapCommand unprefixedRoot() {
+
+        MapCommand unprefixedRoot = new MapCommand();
+        unprefixedRoot.getMap().put("ping", ping());
+        unprefixedRoot.getMap().put("note", note());
+
+        return unprefixedRoot;
+    }
+
     @Bean
     public AbstractCommand rootCommand() {
         if (rootCommand == null) {
             // construct a new
             String commandPrefix = config.getInterpreterCommandPrefix();
-
+            MapCommand unprefixedRoot = unprefixedRoot();
             MapCommand root = new MapCommand();
-            root.getMap().put(commandPrefix.concat("ping"), ping());
-            root.getMap().put(commandPrefix.concat("note"), note());
+
+            for (Map.Entry<String, AbstractCommand> entry : unprefixedRoot.getMap().entrySet()) {
+                root.getMap().put(commandPrefix.concat(entry.getKey()), entry.getValue());
+            }
+            root.getMap().put(commandPrefix, unprefixedRoot);
 
             rootCommand = root;
         }
 
         return rootCommand;
     }
+
 
     private AbstractCommand note() {
         MapCommand noteHandler = new MapCommand();
@@ -62,17 +79,25 @@ public class InterpreterConfig {
                 "* note help - show this message\n" +
                 "\n\r";
 
-        // HELP
+        // NOTE HELP
         noteInfo.setInfo(noteHelp);
         noteHandler.setDefaultAction(noteInfo);
 
-        // SHOW
-        DisplayCommand<Note> show = new DisplayCommand<>();
-        show.setPrinter(PrettyPrinter.getNotePrinter());
-        show.setService(noteService);
-        noteHandler.getMap().put("show", show);
+        // NOTE APPEND
+        UpdateCommand<Note> append = new UpdateCommand<Note>() {
+            @Override
+            public Note updateItem(CommandContext context, Note item) {
+                String append = getRemainingCommand(context).concat("\n");
+                item.setBody(item.getBody().concat(append));
+                return item;
+            }
+        };
+        append.setPrinter(PrettyPrinter.getNotePrinter());
+        append.setService(noteService);
+        noteHandler.getMap().put("append", append);
+        noteHandler.getMap().put("+", append);
 
-        // LIST
+        // NOTE LIST
         DisplayCommand<Iterable<Note>> list = new DisplayCommand<Iterable<Note>>() {
             @Override
             public List<Note> getItem(CommandContext context) throws NoteException {
@@ -82,7 +107,7 @@ public class InterpreterConfig {
         list.setPrinter(PrettyPrinter.getNoteListPrinter());
         noteHandler.getMap().put("list", list);
 
-        // NEW
+        // NOTE NEW
         CreateCommand<Note> create = new CreateCommand<Note>() {
             @Override
             public Note buildItem(CommandContext context) {
@@ -90,7 +115,7 @@ public class InterpreterConfig {
                 note.setOwner(context.getOwner());
                 note.setPrivacy(PrivacyType.NORMAL);
                 note.setTitle(getCurrentCommandPart(context));
-                note.setBody(getRemainingCommand(context));
+                note.setBody(getRemainingCommand(context).concat("\n"));
 
                 return note;
             }
@@ -105,6 +130,33 @@ public class InterpreterConfig {
         noteHandler.getMap().put("new", create);
         noteHandler.getMap().put("create", create);
 
+        // NOTE REMOVE
+        DeleteCommand<Note> remove = new DeleteCommand<Note>();
+        remove.setService(noteService);
+        noteHandler.getMap().put("delete", remove);
+        noteHandler.getMap().put("remove", remove);
+
+        // NOTE SET
+        UpdateCommand<Note> set = new UpdateCommand<Note>() {
+            @Override
+            public Note updateItem(CommandContext context, Note item) {
+                String value = getCurrentCommandPart(context).concat("\n");
+                item.setBody(value);
+
+                return item;
+            }
+        };
+        set.setPrinter(PrettyPrinter.getNotePrinter());
+        set.setService(noteService);
+        noteHandler.getMap().put("set", set);
+
+        // NOTE SHOW
+        DisplayCommand<Note> show = new DisplayCommand<>();
+        show.setPrinter(PrettyPrinter.getNotePrinter());
+        show.setService(noteService);
+        noteHandler.getMap().put("show", show);
+
+        // return
         return noteHandler;
     }
 
