@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.services.SimpleCrudeService;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Slf4j
@@ -32,6 +33,13 @@ public abstract class UpdateCommand<T> extends AbstractCommand {
 
     public T getItem(CommandContext context) throws DmFriendGeneralServiceException {
         String name = getCurrentCommandPart(context);
+
+        if (StringUtils.isNumeric(name)) {
+            Long id = Long.valueOf(name);
+
+            return service.read(id);
+        }
+
         return service.read(name);
     }
 

@@ -12,7 +12,7 @@ public abstract class AbstractCommand {
             cmdPart = context.getCommand().get(context.getIndex());
         }
 
-        return cmdPart;
+        return cmdPart.toLowerCase();
     }
 
     public String getRemainingCommand(CommandContext context) {

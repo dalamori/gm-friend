@@ -1,6 +1,7 @@
 package net.dalamori.GMFriend.config;
 
 import lombok.Data;
+import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.interpreter.AbstractCommand;
 import net.dalamori.GMFriend.interpreter.CommandContext;
@@ -13,7 +14,9 @@ import net.dalamori.GMFriend.interpreter.PrettyPrinter;
 import net.dalamori.GMFriend.interpreter.UpdateCommand;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
+import net.dalamori.GMFriend.services.LocationService;
 import net.dalamori.GMFriend.services.NoteService;
+import net.dalamori.GMFriend.services.PropertyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,14 +34,30 @@ public class InterpreterConfig {
     @Autowired
     private NoteService noteService;
 
+    @Autowired
+    private LocationService locationService;
+
+    @Autowired
+    private PropertyService propertyService;
+
     private AbstractCommand rootCommand;
+
+    private static final AbstractCommand DO_NOTHING = new AbstractCommand() {
+        @Override
+        public void handle(CommandContext context) throws InterpreterException {
+            return;
+        }
+    };
 
     /* Root Command Menu */
     private MapCommand unprefixedRoot() {
 
         MapCommand unprefixedRoot = new MapCommand();
-        unprefixedRoot.getMap().put("ping", ping());
+        unprefixedRoot.getMap().put("location", location());
         unprefixedRoot.getMap().put("note", note());
+        unprefixedRoot.getMap().put("ping", ping());
+
+        unprefixedRoot.setDefaultAction(DO_NOTHING);
 
         return unprefixedRoot;
     }
@@ -51,10 +70,14 @@ public class InterpreterConfig {
             MapCommand unprefixedRoot = unprefixedRoot();
             MapCommand root = new MapCommand();
 
+            // copy all un-prefixed commands, and prefix them;
             for (Map.Entry<String, AbstractCommand> entry : unprefixedRoot.getMap().entrySet()) {
                 root.getMap().put(commandPrefix.concat(entry.getKey()), entry.getValue());
             }
             root.getMap().put(commandPrefix, unprefixedRoot);
+
+            // no-op command to absorb all non-actions
+            root.setDefaultAction(DO_NOTHING);
 
             rootCommand = root;
         }
@@ -62,21 +85,39 @@ public class InterpreterConfig {
         return rootCommand;
     }
 
+    private AbstractCommand location() {
+        MapCommand locationHandler = new MapCommand();
+        InfoCommand locationInfo = new InfoCommand();
+        String locationHelp = "location help:\n\r" +
+                "__Subcommands__:\n" +
+                "* location help - shows this messagen\n" +
+                "* location here - shows $HERE\n" +
+                "* location move [ID/NAME] - sets $HERE\n" +
+                "* location new [ID/NAME] - creates a new location\n" +
+                "* location remove [ID/NAME] - deletes a location\n" +
+                "* location show [ID/NAME] - shows a location\n" +
+                "\n\r";
+
+        // HELP
+        locationInfo.setInfo(locationHelp);
+        locationHandler.setDefaultAction(locationInfo);
+
+        return locationHandler;
+    }
 
     private AbstractCommand note() {
         MapCommand noteHandler = new MapCommand();
         InfoCommand noteInfo = new InfoCommand();
-        String prefix = config.getInterpreterCommandPrefix();
 
-        String noteHelp = prefix + "note help:\n\r" +
-                "Subcommands:\n" +
-                "* note list - lists the notes you own\n" +
-                "* note new [NAME] [CONTENT...] - creates a new note\n" +
-                "* note remove [NAME] - deletes a note\n" +
-                "* note set [NAME] [CONTENT...] - updates a note\n" +
-                "* note append [NAME] [CONTENT...] - adds add'l content to the end of a note\n" +
-                "* note show [NAME] - Shows a note\n" +
+        String noteHelp ="note help:\n\r" +
+                "__Subcommands__:\n" +
+                "* note append [ID/NAME] [CONTENT...] - adds add'l content to the end of a note\n" +
                 "* note help - show this message\n" +
+                "* note list - lists global notes\n" +
+                "* note new [ID/NAME] [CONTENT...] - creates a new note\n" +
+                "* note remove [ID/NAME] - deletes a note\n" +
+                "* note set [ID/NAME] [CONTENT...] - updates a note\n" +
+                "* note show [ID/NAME] - Shows a note\n" +
                 "\n\r";
 
         // NOTE HELP

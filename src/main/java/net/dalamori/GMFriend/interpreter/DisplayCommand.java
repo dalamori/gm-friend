@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.services.SimpleCrudeService;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -25,6 +26,13 @@ public class DisplayCommand<T> extends AbstractCommand {
 
     public T getItem(CommandContext context) throws DmFriendGeneralServiceException {
         String name = getCurrentCommandPart(context);
+
+        if (StringUtils.isNumeric(name)) {
+            Long id = Long.valueOf(name);
+
+            return service.read(id);
+        }
+
         return service.read(name);
     }
 }

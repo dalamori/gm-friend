@@ -3,7 +3,7 @@ package net.dalamori.GMFriend.services;
 import net.dalamori.GMFriend.exceptions.LocationException;
 import net.dalamori.GMFriend.models.Location;
 
-public interface LocationService {
+public interface LocationService extends SimpleCrudeService<Location> {
 
     Location create(Location location) throws LocationException;
 
