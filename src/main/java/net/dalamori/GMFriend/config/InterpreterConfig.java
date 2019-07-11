@@ -10,8 +10,9 @@ import net.dalamori.GMFriend.interpreter.DeleteCommand;
 import net.dalamori.GMFriend.interpreter.DisplayCommand;
 import net.dalamori.GMFriend.interpreter.InfoCommand;
 import net.dalamori.GMFriend.interpreter.MapCommand;
-import net.dalamori.GMFriend.interpreter.PrettyPrinter;
+import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.interpreter.UpdateCommand;
+import net.dalamori.GMFriend.interpreter.printer.PrinterFactory;
 import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.services.LocationService;
@@ -41,6 +42,7 @@ public class InterpreterConfig {
     private PropertyService propertyService;
 
     private AbstractCommand rootCommand;
+    private PrinterFactory printerFactory;
 
     private static final AbstractCommand DO_NOTHING = new AbstractCommand() {
         @Override
@@ -48,6 +50,16 @@ public class InterpreterConfig {
             return;
         }
     };
+
+    @Bean
+    public PrinterFactory printerFactory() {
+        if (printerFactory == null) {
+            printerFactory = new PrinterFactory();
+            printerFactory.setConfig(config);
+        }
+
+        return printerFactory;
+    }
 
     /* Root Command Menu */
     private MapCommand unprefixedRoot() {
@@ -109,6 +121,9 @@ public class InterpreterConfig {
         MapCommand noteHandler = new MapCommand();
         InfoCommand noteInfo = new InfoCommand();
 
+        // make sure that printerFactory has been init'd
+        printerFactory();
+
         String noteHelp ="note help:\n\r" +
                 "__Subcommands__:\n" +
                 "* note append [ID/NAME] [CONTENT...] - adds add'l content to the end of a note\n" +
@@ -133,7 +148,7 @@ public class InterpreterConfig {
                 return item;
             }
         };
-        append.setPrinter(PrettyPrinter.getNotePrinter());
+        append.setPrinter(printerFactory.getNotePrinter());
         append.setService(noteService);
         noteHandler.getMap().put("append", append);
         noteHandler.getMap().put("+", append);
@@ -145,7 +160,7 @@ public class InterpreterConfig {
                 return noteService.getGlobalNotes();
             }
         };
-        list.setPrinter(PrettyPrinter.getNoteListPrinter());
+        list.setPrinter(printerFactory.getNoteListPrinter());
         noteHandler.getMap().put("list", list);
 
         // NOTE NEW
@@ -167,7 +182,7 @@ public class InterpreterConfig {
             }
         };
         create.setService(noteService);
-        create.setPrinter(PrettyPrinter.getNotePrinter());
+        create.setPrinter(printerFactory.getNotePrinter());
         noteHandler.getMap().put("new", create);
         noteHandler.getMap().put("create", create);
 
@@ -187,13 +202,13 @@ public class InterpreterConfig {
                 return item;
             }
         };
-        set.setPrinter(PrettyPrinter.getNotePrinter());
+        set.setPrinter(printerFactory.getNotePrinter());
         set.setService(noteService);
         noteHandler.getMap().put("set", set);
 
         // NOTE SHOW
         DisplayCommand<Note> show = new DisplayCommand<>();
-        show.setPrinter(PrettyPrinter.getNotePrinter());
+        show.setPrinter(printerFactory.getNotePrinter());
         show.setService(noteService);
         noteHandler.getMap().put("show", show);
 

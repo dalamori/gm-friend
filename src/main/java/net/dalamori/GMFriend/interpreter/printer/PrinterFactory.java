@@ -1,14 +1,25 @@
-package net.dalamori.GMFriend.interpreter;
+package net.dalamori.GMFriend.interpreter.printer;
 
+import lombok.Data;
+import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.Note;
-public abstract class PrettyPrinter<T> {
 
-    public static final String HR = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n";
+@Data
+public class PrinterFactory {
 
-    public abstract String print(T object);
+    private DmFriendConfig config;
 
-    public static PrettyPrinter<Note> getNotePrinter() {
+    private String HR = "---";
+    private String BULLET = "x ";
+
+    public void setConfig(DmFriendConfig config) {
+        HR = config.getInterpreterPrinterHr();
+        BULLET = config.getInterpreterPrinterBullet();
+        this.config = config;
+    }
+
+    public PrettyPrinter<Note> getNotePrinter() {
         return new PrettyPrinter<Note>() {
             @Override
             public String print(Note note) {
@@ -23,11 +34,11 @@ public abstract class PrettyPrinter<T> {
         };
     }
 
-    public static PrettyPrinter<Iterable<Note>> getNoteListPrinter() {
+    public PrettyPrinter<Iterable<Note>> getNoteListPrinter() {
         return new PrettyPrinter<Iterable<Note>>() {
             @Override
             public String print(Iterable<Note> noteList) {
-                PrettyPrinter<Note> notePrinter = PrettyPrinter.getNotePrinter();
+                PrettyPrinter<Note> notePrinter = getNotePrinter();
                 int index = 0;
                 String output = HR;
                 for (Note note : noteList) {
@@ -49,39 +60,29 @@ public abstract class PrettyPrinter<T> {
     }
 
 
-    public static PrettyPrinter<Location> getLocationPrinter() {
+    public PrettyPrinter<Location> getLocationPrinter() {
         return new PrettyPrinter<Location>() {
             @Override
             public String print(Location object) {
-                String output = String.format("[Location #%d] **%s**\n", formatName(object.getName())) + HR;
+                String output = String.format("[Location #%d] **%s**\n", formatName(object.getName())) +
+                        HR;
 
                 if (object.getNotes().size() > 0) {
 
                     output += "__Notes__:\n";
                     for(Note note : object.getNotes()) {
-                        output += String.format("- [N#%d] **%s**: %s\n", note.getId(), formatName(note.getTitle()), truncate(note.getBody(), 64));
+                        output += String.format("%s [N#%d] **%s**: %s\n", BULLET, note.getId(), formatName(note.getTitle()), truncate(note.getBody(), 64));
                     }
                 }
 
+                if (object.getLinks().size() > 0) {
 
+                }
 
 
                 return output;
             }
         };
-    }
-
-    public static String formatName(String input) {
-        return input.replaceAll("_", " ");
-
-    }
-
-    public static String truncate(String input, int length) {
-        if (input.length() <= length ) {
-            return input;
-        }
-
-        return input.substring(0, length).concat("...");
     }
 
 }

@@ -5,6 +5,7 @@ build/
 !**/src/main/**
 !**/src/test/**
 secrets.properties
+mysql-data/
 
 ### STS ###
 .apt_generated

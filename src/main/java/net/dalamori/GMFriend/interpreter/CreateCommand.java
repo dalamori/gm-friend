@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
+import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.services.SimpleCrudeService;
 
 @Data

@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
 
-import javax.validation.Valid;
-
 @Data
 @Configuration
 @PropertySources(value = {
@@ -46,9 +44,14 @@ public class DmFriendConfig {
     @Value("${interpreter.commandPrefix:;;}")
     private String interpreterCommandPrefix;
 
+    @Value("${interpreter.printer.bullet:▸}")
+    private String interpreterPrinterBullet;
+
+    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n}")
+    private String interpreterPrinterHr;
+
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
-
 }
 
 
