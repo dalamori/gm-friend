@@ -9,4 +9,5 @@ services:
       MYSQL_USER: "friend"
       MYSQL_PASSWORD: "ChangeMe"
       MYSQL_DATABASE: 'dm_friend'
-
+    volumes:
+      - ./mysql-data/:/var/lib/mysql/
