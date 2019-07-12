@@ -18,7 +18,7 @@ public class MapCommand extends AbstractCommand {
 
     @Override
     public void handle(CommandContext context) throws InterpreterException {
-        String commandPart = getCurrentCommandPart(context);
+        String commandPart = getCurrentCommandPart(context).toLowerCase();
 
         // try to follow map
         if (map.containsKey(commandPart)) {

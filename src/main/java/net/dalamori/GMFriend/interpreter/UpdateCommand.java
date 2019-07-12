@@ -23,8 +23,9 @@ public abstract class UpdateCommand<T> extends AbstractCommand {
         try {
             item = getItem(context);
             item = updateItem(context, item);
-            item = service.update(item);
-            afterSave(item);
+
+            item = save(item);
+            afterSave(context, item);
             context.setResponse(printer.print(item));
         } catch (DmFriendGeneralServiceException ex) {
             log.debug("UpdateCommand::handle failed to update {} item", item, ex);
@@ -44,7 +45,11 @@ public abstract class UpdateCommand<T> extends AbstractCommand {
         return service.read(name);
     }
 
-    public void afterSave(T item) throws DmFriendGeneralServiceException {
+    public T save(T item) throws DmFriendGeneralServiceException {
+        return service.update(item);
+    }
+
+    public void afterSave(CommandContext context, T item) throws DmFriendGeneralServiceException {
         return;
     }
 

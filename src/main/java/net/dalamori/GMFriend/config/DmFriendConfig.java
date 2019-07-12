@@ -50,6 +50,9 @@ public class DmFriendConfig {
     @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n}")
     private String interpreterPrinterHr;
 
+    @Value("${location.here.globalName:__HERE__}")
+    private String locationHereGlobalName;
+
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
 }

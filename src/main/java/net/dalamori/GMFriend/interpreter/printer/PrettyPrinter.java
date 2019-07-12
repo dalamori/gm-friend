@@ -13,11 +13,18 @@ public abstract class PrettyPrinter<T> {
     }
 
     public static String truncate(String input, int length) {
-        if (input.length() <= length ) {
+        int cutAt = length;
+        int firstNewline = input.indexOf("\n");
+
+        if (firstNewline > 0 && firstNewline < length) {
+            cutAt = firstNewline;
+        }
+
+        if (input.length() <= cutAt ) {
             return input;
         }
 
-        return input.substring(0, length).concat("...");
+        return input.substring(0, cutAt).concat("...");
     }
 
 }

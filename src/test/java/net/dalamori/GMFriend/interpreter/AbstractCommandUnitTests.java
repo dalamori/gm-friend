@@ -4,6 +4,7 @@ import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -64,6 +65,12 @@ public class AbstractCommandUnitTests {
 
     }
 
+    @Ignore
+    @Test
+    public void abstractCommand_getCurrentCommandPart_shouldHappyPathWhenOffset() {
+
+    }
+
     @Test
     public void abstractCommand_getRemainingCommand_shouldHappyPath() {
         // given: index is 2
@@ -86,6 +93,12 @@ public class AbstractCommandUnitTests {
 
         // then: I should get the remaining command as a string
         Assert.assertEquals("should return rest of command", "", result);
+    }
+
+    @Ignore
+    @Test
+    public void abstractCommand_getRemainingCommand_shouldHappyPathWhenOffset() {
+
     }
 
 }

@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.interpreter.printer;
 import lombok.Data;
 import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.models.Location;
+import net.dalamori.GMFriend.models.LocationLink;
 import net.dalamori.GMFriend.models.Note;
 
 @Data
@@ -63,22 +64,34 @@ public class PrinterFactory {
     public PrettyPrinter<Location> getLocationPrinter() {
         return new PrettyPrinter<Location>() {
             @Override
-            public String print(Location object) {
-                String output = String.format("[Location #%d] **%s**\n", formatName(object.getName())) +
+            public String print(Location location) {
+                String output = String.format("[Location #%d] **%s**\n", location.getId(), formatName(location.getName())) +
                         HR;
 
-                if (object.getNotes().size() > 0) {
+                if (location.getNotes().size() > 0) {
 
                     output += "__Notes__:\n";
-                    for(Note note : object.getNotes()) {
-                        output += String.format("%s [N#%d] **%s**: %s\n", BULLET, note.getId(), formatName(note.getTitle()), truncate(note.getBody(), 64));
+                    for(Note note : location.getNotes()) {
+                        output += String.format("%s [N#%d] **%s**: %s\n",
+                                BULLET,
+                                note.getId(),
+                                formatName(note.getTitle()),
+                                truncate(note.getBody(), 64));
                     }
                 }
 
-                if (object.getLinks().size() > 0) {
-
+                if (location.getLinks().size() > 0) {
+                    output += "__Links__:\n";
+                    for (LocationLink link : location.getLinks()) {
+                        output += String.format("%s [L#%d] **%s**: %s\n",
+                                BULLET,
+                                link.getDestination().getId(),
+                                link.getDestination().getName(),
+                                link.getShortDescription());
+                    }
                 }
 
+                output += HR + String.format("by: %s\n\r", location.getOwner());
 
                 return output;
             }

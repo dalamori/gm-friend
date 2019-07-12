@@ -20,29 +20,35 @@ public class DiscordListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        CommandContext context = new CommandContext();
 
         if (event.getAuthor().isBot()) {
             return;
         }
 
-        context.setOwner(event.getAuthor().getAsTag());
+        CommandContext context = interpret(event.getMessage().getContentRaw(), event.getAuthor().getAsTag());
 
-        context.setCommand(Arrays.asList(event.getMessage().getContentRaw().split("\\s")));
+        if (context.getResponse() != null) {
+            event.getChannel().sendMessage(context.getResponse()).queue();
+        }
+    }
+
+    public CommandContext interpret(String rawCommand, String owner) {
+        CommandContext context = new CommandContext();
+
+        context.setOwner(owner);
+
+        context.setCommand(Arrays.asList(rawCommand.split("\\s")));
+
         context.setIndex(0);
-
         try {
             interpreter.handle(context);
 
-            if (context.getResponse() != null) {
-                event.getChannel().sendMessage(context.getResponse()).queue();
-            }
-
         } catch (InterpreterException ex) {
-            event.getChannel().sendMessage("Error Received, and not caught!: " + ex.getMessage() ).queue();
-            log.debug("DiscordListener::onMessageReceived got an error parsing the command: {}",
-                    event.getMessage().getContentRaw(), ex);
+            context.setResponse("Error Received, and not caught!: " + ex.getMessage());
+            log.debug("DiscordListener::interpret got an error parsing the command: {}",
+                    rawCommand, ex);
         }
 
+        return context;
     }
 }

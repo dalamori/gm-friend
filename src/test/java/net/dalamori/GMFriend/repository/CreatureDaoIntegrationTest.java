@@ -41,7 +41,7 @@ public class CreatureDaoIntegrationTest {
 
     @Test
     public void creatureDao_save_shouldHappyPath() {
-        // when: i try to save the creature
+        // when: I try to save the creature
         Creature savedCreature = creatureDao.save(creature);
 
         // then: I expect the return value to have an Id

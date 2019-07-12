@@ -19,7 +19,7 @@ public class DeleteCommand<T> extends AbstractCommand {
     public void handle(CommandContext context) throws InterpreterException {
         try {
             T item = getItem(context);
-            beforeDelete(item);
+            beforeDelete(context, item);
             service.delete(item);
 
             context.setResponse("OK");
@@ -41,7 +41,7 @@ public class DeleteCommand<T> extends AbstractCommand {
         return service.read(name);
     }
 
-    public void beforeDelete(T item) throws DmFriendGeneralServiceException {
+    public void beforeDelete(CommandContext context, T item) throws DmFriendGeneralServiceException {
         return;
     }
 }
