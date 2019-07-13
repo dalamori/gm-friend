@@ -15,7 +15,7 @@ import java.util.Arrays;
 @RunWith(SpringRunner.class)
 @Category(UnitTest.class)
 @SpringBootTest
-public class AbstractCommandUnitTests {
+public class AbstractCommandUnitTest {
 
     private CommandContext context;
     private AbstractCommand command;
