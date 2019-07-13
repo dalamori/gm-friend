@@ -189,7 +189,7 @@ public class GroupServiceImpl implements GroupService {
         group.setPrivacy(PrivacyType.INTERNAL);
         group.setName(name);
         group.setOwner(config.getSystemGroupOwner());
-        group.setContentType(PropertyType.NOTE);
+        group.setContentType(groupType);
 
         return groupDao.save(group);
     }

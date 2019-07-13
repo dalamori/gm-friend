@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
 
-import javax.validation.Valid;
-
 @Data
 @Configuration
 @PropertySources(value = {
@@ -43,9 +41,20 @@ public class DmFriendConfig {
     @Value("${groups.system.prefix:__SYS__}")
     private String systemGroupPrefix;
 
+    @Value("${interpreter.commandPrefix:;;}")
+    private String interpreterCommandPrefix;
+
+    @Value("${interpreter.printer.bullet:▸}")
+    private String interpreterPrinterBullet;
+
+    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n}")
+    private String interpreterPrinterHr;
+
+    @Value("${location.here.globalName:__HERE__}")
+    private String locationHereGlobalName;
+
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
-
 }
 
 
