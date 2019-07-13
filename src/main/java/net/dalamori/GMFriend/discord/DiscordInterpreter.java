@@ -14,7 +14,7 @@ import java.util.Arrays;
 @Data
 @Slf4j
 @EqualsAndHashCode(callSuper = false)
-public class DiscordListener extends ListenerAdapter {
+public class DiscordInterpreter extends ListenerAdapter {
 
     AbstractCommand interpreter;
 
@@ -45,7 +45,7 @@ public class DiscordListener extends ListenerAdapter {
 
         } catch (InterpreterException ex) {
             context.setResponse("Error Received, and not caught!: " + ex.getMessage());
-            log.debug("DiscordListener::interpret got an error parsing the command: {}",
+            log.debug("DiscordInterpreter::interpret got an error parsing the command: {}",
                     rawCommand, ex);
         }
 

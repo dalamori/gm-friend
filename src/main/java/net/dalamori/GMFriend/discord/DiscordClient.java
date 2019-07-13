@@ -28,7 +28,7 @@ public class DiscordClient {
         jdaBuilder = new JDABuilder(AccountType.BOT);
         jdaBuilder.setToken(secrets.getDiscordToken());
 
-        DiscordListener listener = new DiscordListener();
+        DiscordInterpreter listener = new DiscordInterpreter();
         listener.setInterpreter(interpreter.rootCommand());
 
         jdaBuilder.addEventListeners(listener);

@@ -84,6 +84,7 @@ public class InterpreterConfig {
                 bulletPrefix + "help - displays this message\n" +
                 bulletPrefix + "here - shortcut for \"location here\"; displays $HERE\n" +
                 bulletPrefix + "location [...] - Location commands; see \"location help\" for more info\n" +
+                bulletPrefix + "mobile [...] - Mobile commands; see \"mobile help\" for more info\n" +
                 bulletPrefix + "note [...] - Note commands; see \"note help\" for more info\n" +
                 "\n\r";
         InfoCommand help = new InfoCommand();
@@ -161,24 +162,7 @@ public class InterpreterConfig {
         locationHandler.getMap().put("here", locationHere());
 
         // LINK
-        AttachCommand<Location, Location> link = new AttachCommand<Location, Location>() {
-            @Override
-            public Location updateItem(CommandContext context, Location parent, Location child) {
-                LocationLink link = new LocationLink();
-                link.setOrigin(parent);
-                link.setDestination(child);
-                link.setShortDescription(getRemainingCommand(context, 1));
-                link.setPrivacy(PrivacyType.NORMAL);
-
-                parent.getLinks().add(link);
-
-                return parent;
-            }
-        };
-        link.setChildService(locationService);
-        link.setService(locationService);
-        link.setPrinter(printerFactory.getLocationPrinter());
-        locationHandler.getMap().put("link", link);
+        locationHandler.getMap().put("link", locationLink());
 
         // MOVE
         AbstractCommand move = locationMove();
@@ -203,31 +187,7 @@ public class InterpreterConfig {
         locationHandler.getMap().put("+", create);
 
         // NOTE
-        AttachCommand<Location, Note> note = new AttachCommand<Location, Note>() {
-            @Override
-            public Location updateItem(CommandContext context, Location parent, Note child) {
-                context.getData().put("child", child);
-                parent.getNotes().add(child);
-                return parent;
-            }
-
-            @Override
-            public void afterSave(CommandContext context, Location item) throws DmFriendGeneralServiceException {
-                Note note = (Note) context.getData().get("child");
-
-                if (note != null) {
-                    try {
-                        noteService.detachFromGlobalContext(note);
-                    } catch (NoteException ex) {
-                        log.debug("Location note command - failed to detach note #{} from global list", note.getId(), ex);
-                    }
-                }
-            }
-        };
-        note.setService(locationService);
-        note.setChildService(noteService);
-        note.setPrinter(printerFactory.getLocationPrinter());
-        locationHandler.getMap().put("note", note);
+        locationHandler.getMap().put("note", locationNote());
 
         // REMOVE
         DeleteCommand<Location> remove = new DeleteCommand<>();
@@ -242,58 +202,10 @@ public class InterpreterConfig {
         locationHandler.getMap().put("show", show);
 
         // UN-LINK
-        AttachCommand<Location, Location> unLink = new AttachCommand<Location, Location>() {
-            @Override
-            public Location updateItem(CommandContext context, Location parent, Location child) {
-
-                Iterator<LocationLink> iterator = parent.getLinks().iterator();
-                while (iterator.hasNext()) {
-                    LocationLink link = iterator.next();
-                    if (link.getDestination().getId() == child.getId()) {
-                        iterator.remove();
-                        break;
-                    }
-                }
-                return parent;
-            }
-        };
-        unLink.setChildService(locationService);
-        unLink.setService(locationService);
-        unLink.setPrinter(printerFactory.getLocationPrinter());
-        locationHandler.getMap().put("unlink", unLink);
+        locationHandler.getMap().put("unlink", locationRemoveLink());
 
         // UN-NOTE
-        AttachCommand<Location, Note> unNote = new AttachCommand<Location, Note>() {
-            @Override
-            public Location updateItem(CommandContext context, Location parent, Note child) {
-                Iterator<Note> iterator = parent.getNotes().iterator();
-                while(iterator.hasNext()) {
-                    if (child.equals(iterator.next())) {
-                        iterator.remove();
-                        break;
-                    }
-                }
-                return parent;
-            }
-
-            @Override
-            public void afterSave(CommandContext context, Location item) throws DmFriendGeneralServiceException {
-
-                if (context.getData().containsKey("child")) {
-                    Note note = (Note) context.getData().get("child");
-
-                    try {
-                        noteService.attachToGlobalContext(note);
-                    } catch (NoteException ex) {
-                        log.debug("location unnote command: failed to re-attach note to global list", ex);
-                    }
-                }
-            }
-        };
-        unNote.setService(locationService);
-        unNote.setChildService(noteService);
-        unNote.setPrinter(printerFactory.getLocationPrinter());
-        locationHandler.getMap().put("unnote", unNote);
+        locationHandler.getMap().put("unnote", locationRemoveNote());
 
         return locationHandler;
     }
@@ -326,6 +238,28 @@ public class InterpreterConfig {
         here.setService(locationService);
 
         return here;
+    }
+
+    private AbstractCommand locationLink() {
+        AttachCommand<Location, Location> link = new AttachCommand<Location, Location>() {
+            @Override
+            public Location updateItem(CommandContext context, Location parent, Location child) {
+                LocationLink link = new LocationLink();
+                link.setOrigin(parent);
+                link.setDestination(child);
+                link.setShortDescription(getRemainingCommand(context, 1));
+                link.setPrivacy(PrivacyType.NORMAL);
+
+                parent.getLinks().add(link);
+
+                return parent;
+            }
+        };
+        link.setChildService(locationService);
+        link.setService(locationService);
+        link.setPrinter(printerFactory.getLocationPrinter());
+
+        return link;
     }
 
     private AbstractCommand locationMove() {
@@ -375,18 +309,129 @@ public class InterpreterConfig {
         return move;
     }
 
+    private AbstractCommand locationNote() {
+        AttachCommand<Location, Note> note = new AttachCommand<Location, Note>() {
+            @Override
+            public Location updateItem(CommandContext context, Location parent, Note child) {
+                context.getData().put("child", child);
+                parent.getNotes().add(child);
+                return parent;
+            }
+
+            @Override
+            public void afterSave(CommandContext context, Location item) throws DmFriendGeneralServiceException {
+                Note note = (Note) context.getData().get("child");
+
+                if (note != null) {
+                    try {
+                        noteService.detachFromGlobalContext(note);
+                    } catch (NoteException ex) {
+                        log.debug("Location note command - failed to detach note #{} from global list", note.getId(), ex);
+                    }
+                }
+            }
+        };
+        note.setService(locationService);
+        note.setChildService(noteService);
+        note.setPrinter(printerFactory.getLocationPrinter());
+
+        return note;
+    }
+
+    private AbstractCommand locationRemoveLink() {
+        AttachCommand<Location, Location> unLink = new AttachCommand<Location, Location>() {
+            @Override
+            public Location updateItem(CommandContext context, Location parent, Location child) {
+
+                Iterator<LocationLink> iterator = parent.getLinks().iterator();
+                while (iterator.hasNext()) {
+                    LocationLink link = iterator.next();
+                    if (link.getDestination().getId() == child.getId()) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+                return parent;
+            }
+        };
+        unLink.setChildService(locationService);
+        unLink.setService(locationService);
+        unLink.setPrinter(printerFactory.getLocationPrinter());
+
+        return unLink;
+    }
+
+    private AbstractCommand locationRemoveNote() {
+        AttachCommand<Location, Note> unNote = new AttachCommand<Location, Note>() {
+            @Override
+            public Location updateItem(CommandContext context, Location parent, Note child) {
+                Iterator<Note> iterator = parent.getNotes().iterator();
+                while(iterator.hasNext()) {
+                    if (child.equals(iterator.next())) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+                return parent;
+            }
+
+            @Override
+            public void afterSave(CommandContext context, Location item) throws DmFriendGeneralServiceException {
+
+                if (context.getData().containsKey("child")) {
+                    Note note = (Note) context.getData().get("child");
+
+                    try {
+                        noteService.attachToGlobalContext(note);
+                    } catch (NoteException ex) {
+                        log.debug("location unnote command: failed to re-attach note to global list", ex);
+                    }
+                }
+            }
+        };
+        unNote.setService(locationService);
+        unNote.setChildService(noteService);
+        unNote.setPrinter(printerFactory.getLocationPrinter());
+
+        return unNote;
+    }
+
+
+    private AbstractCommand mobile() {
+        MapCommand mobileHandler = new MapCommand();
+        InfoCommand mobileInfo = new InfoCommand();
+        String bullet = config.getInterpreterPrinterBullet();
+
+        String mobileHelp = "mobile help:\n" +
+                config.getInterpreterPrinterHr() +
+                "__Subcommands__:\n" +
+                bullet + " mobile blank [NAME] [HP*] [INITIATIVE*] - creates a new mobile, optionally with hp and init\n" +
+                bullet + " mobile damage [ID/NAME] [AMOUNT] - reduces a mobiles HP by an amount\n" +
+                bullet + " mobile heal [ID/NAME] [AMOUNT] - increases a mobiles HP by an amount\n" +
+                bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE*] - creates a new mobile from a creature template\n" +
+                bullet + " mobile kill [ID/NAME] - insta-kill a mobile\n" +
+                bullet + " mobile restore [ID/NAME] - resets a mobile to alive, and full hp\n" +
+                "\n\r";
+
+        mobileInfo.setInfo(mobileHelp);
+        mobileHandler.setDefaultAction(mobileInfo);
+
+        return mobileHandler;
+    }
+
+
     private AbstractCommand note() {
         MapCommand noteHandler = new MapCommand();
         InfoCommand noteInfo = new InfoCommand();
         String bullet = config.getInterpreterPrinterBullet();
 
-        String noteHelp ="note help:\n" +
+        String noteHelp = "note help:\n" +
                 config.getInterpreterPrinterHr() +
                 "__Subcommands__:\n" +
                 bullet + " note append [ID/NAME] [CONTENT...] - adds add'l content to the end of a note\n" +
                 bullet + " note help - show this message\n" +
                 bullet + " note list - lists global notes\n" +
-                bullet + " note new [ID/NAME] [CONTENT...] - creates a new note\n" +
+                bullet + " note new [NAME] [CONTENT...] - creates a new note\n" +
                 bullet + " note remove [ID/NAME] - deletes a note\n" +
                 bullet + " note set [ID/NAME] [CONTENT...] - updates a note\n" +
                 bullet + " note show [ID/NAME] - Shows a note\n" +

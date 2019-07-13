@@ -4,7 +4,6 @@ import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -65,10 +64,16 @@ public class AbstractCommandUnitTests {
 
     }
 
-    @Ignore
     @Test
     public void abstractCommand_getCurrentCommandPart_shouldHappyPathWhenOffset() {
+        // given index is 3:
+        context.setIndex(3);
 
+        // when: I look up the current command part
+        String result = command.getCurrentCommandPart(context, -1);
+
+        // then: I should get the current command part
+        Assert.assertEquals("should get the correct part", "dolor", result);
     }
 
     @Test
@@ -95,10 +100,16 @@ public class AbstractCommandUnitTests {
         Assert.assertEquals("should return rest of command", "", result);
     }
 
-    @Ignore
     @Test
     public void abstractCommand_getRemainingCommand_shouldHappyPathWhenOffset() {
+        // given: index is 2
+        context.setIndex(2);
 
+        // when: I get the remaining command;
+        String result = command.getRemainingCommand(context, -1);
+
+        // then: I should get the remaining command as a string
+        Assert.assertEquals("should return rest of command", "dolor sit amet", result);
     }
 
 }
