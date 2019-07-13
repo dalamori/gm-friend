@@ -154,22 +154,22 @@ public class InterpreterConfig {
                 bullet + " location unnote [LOCATION_NAME/ID] [NOTE_NAME/ID]\n" +
                 "\n\r";
 
-        // HELP
+        // LOCATION HELP
         locationInfo.setInfo(locationHelp);
         locationHandler.setDefaultAction(locationInfo);
 
-        // HERE
+        // LOCATION HERE
         locationHandler.getMap().put("here", locationHere());
 
-        // LINK
+        // LOCATION LINK
         locationHandler.getMap().put("link", locationLink());
 
-        // MOVE
+        // LOCATION MOVE
         AbstractCommand move = locationMove();
         locationHandler.getMap().put("move", move);
         locationHandler.getMap().put("go", move);
 
-        // NEW
+        // LOCATION NEW
         CreateCommand<Location> create = new CreateCommand<Location>() {
             @Override
             public Location buildItem(CommandContext context) {
@@ -186,25 +186,25 @@ public class InterpreterConfig {
         locationHandler.getMap().put("new", create);
         locationHandler.getMap().put("+", create);
 
-        // NOTE
+        // LOCATION NOTE
         locationHandler.getMap().put("note", locationNote());
 
-        // REMOVE
+        // LOCATION REMOVE
         DeleteCommand<Location> remove = new DeleteCommand<>();
         remove.setService(locationService);
         locationHandler.getMap().put("remove", remove);
         locationHandler.getMap().put("delete", remove);
 
-        // SHOW
+        // LOCATION SHOW
         DisplayCommand<Location> show = new DisplayCommand<>();
         show.setPrinter(printerFactory.getLocationPrinter());
         show.setService(locationService);
         locationHandler.getMap().put("show", show);
 
-        // UN-LINK
+        // LOCATION UN-LINK
         locationHandler.getMap().put("unlink", locationRemoveLink());
 
-        // UN-NOTE
+        // LOCATION UN-NOTE
         locationHandler.getMap().put("unnote", locationRemoveNote());
 
         return locationHandler;
