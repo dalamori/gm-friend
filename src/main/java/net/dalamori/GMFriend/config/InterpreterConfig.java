@@ -408,13 +408,43 @@ public class InterpreterConfig {
                 bullet + " mobile blank [NAME] [HP*] [INITIATIVE*] - creates a new mobile, optionally with hp and init\n" +
                 bullet + " mobile damage [ID/NAME] [AMOUNT] - reduces a mobiles HP by an amount\n" +
                 bullet + " mobile heal [ID/NAME] [AMOUNT] - increases a mobiles HP by an amount\n" +
-                bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE*] - creates a new mobile from a creature template\n" +
+                bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE*] - creates a new mobile from a creature template, optionally with initiative\n" +
                 bullet + " mobile kill [ID/NAME] - insta-kill a mobile\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] [...] - sets a property of the mobile, see full syntax below\n" +
                 bullet + " mobile restore [ID/NAME] - resets a mobile to alive, and full hp\n" +
+                bullet + " mobile unset [MOBILE_ID/NAME] [KEY] - deletes a property of the mobile\n" +
+                "\n\r" +
+                "__Mobile Set syntax__:\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] [VALUE]\n - sets a property of the mobile to a given value\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] add [AMOUNT*] - increases a numeric property value by 1, or optionally another amount\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] creature [CREATURE_ID/NAME] - sets a property of the mobile to a given creature\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] location [LOCATION_ID/NAME] - sets a property of the mobile to a given location\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] mobile [MOBILE_ID/NAME] - sets a property of the mobile to a given mobile\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] note [NOTE_ID/TITLE] - sets a property of the mobile to a given note\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] subtract [AMOUNT*] - increases a numeric property value by 1, or optionally another amount\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] -- [AMOUNT*] - alias for mobile set ... subtract\n" +
+                bullet + " mobile set [MOBILE_ID/NAME] [KEY] ++ [AMOUNT*] - alias for mobile set ... add\n" +
                 "\n\r";
 
         mobileInfo.setInfo(mobileHelp);
         mobileHandler.setDefaultAction(mobileInfo);
+
+        // MOBILE BLANK
+
+        // MOBILE DAMAGE
+
+        // MOBILE HEAL
+
+        // MOBILE NEW
+
+        // MOBILE KILL
+
+        // MOBILE SET
+
+        // MOBILE RESTORE
+
+        // MOBILE UNSET
+
 
         return mobileHandler;
     }

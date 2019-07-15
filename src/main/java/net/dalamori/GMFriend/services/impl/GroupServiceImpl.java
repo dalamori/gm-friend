@@ -10,6 +10,7 @@ import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.services.GroupService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,6 +82,10 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Group read(String name) throws GroupException {
+        if (StringUtils.isNumeric(name)) {
+            return read(Long.valueOf(name));
+        }
+
         Optional<Group> result = groupDao.findByName(name);
 
         if (!result.isPresent()) {
@@ -103,6 +108,9 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public boolean exists(String name) {
         if (name != null) {
+            if (StringUtils.isNumeric(name)) {
+                return groupDao.existsById(Long.valueOf(name));
+            }
             return groupDao.existsByName(name);
         }
 

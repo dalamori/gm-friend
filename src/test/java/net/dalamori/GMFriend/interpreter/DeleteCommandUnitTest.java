@@ -42,13 +42,13 @@ public class DeleteCommandUnitTest {
     @Test
     public void deleteCommand_handle_shouldHappyPath() throws DmFriendGeneralServiceException {
         // given: a stub so delete can look up
-        Mockito.when(mockService.read(Mockito.anyLong())).thenReturn("Wanda");
+        Mockito.when(mockService.read(Mockito.anyString())).thenReturn("Wanda");
 
         // when: I invoke the command;
         command.handle(context);
 
         // then: I expect to see the the delete call to the service
-        Mockito.verify(mockService).read(44L);
+        Mockito.verify(mockService).read("44");
         Mockito.verify(mockService).delete("Wanda");
 
         // and: some acknowledgement has been sent

@@ -12,6 +12,7 @@ import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.MobileDao;
 import net.dalamori.GMFriend.services.MobileService;
 import net.dalamori.GMFriend.services.PropertyService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,6 +121,10 @@ public class MobileServiceImpl implements MobileService {
 
     @Override
     public Mobile read(String name) throws MobileException {
+        if (StringUtils.isNumeric(name)) {
+            return read(Long.valueOf(name));
+        }
+
         Optional<Mobile> result = mobileDao.findByName(name);
 
         if (!result.isPresent()) {
@@ -154,6 +159,9 @@ public class MobileServiceImpl implements MobileService {
     @Override
     public boolean exists(String name) {
         if (name != null) {
+            if (StringUtils.isNumeric(name)) {
+                return mobileDao.existsById(Long.valueOf(name));
+            }
             return mobileDao.existsByName(name);
         }
 

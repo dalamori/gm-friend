@@ -27,13 +27,6 @@ public class DisplayCommand<T> extends AbstractCommand {
 
     public T getItem(CommandContext context) throws DmFriendGeneralServiceException {
         String name = getCurrentCommandPart(context);
-
-        if (StringUtils.isNumeric(name)) {
-            Long id = Long.valueOf(name);
-
-            return service.read(id);
-        }
-
         return service.read(name);
     }
 }

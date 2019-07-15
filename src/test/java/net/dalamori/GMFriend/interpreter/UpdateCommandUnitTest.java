@@ -52,7 +52,7 @@ public class UpdateCommandUnitTest {
     @Test
     public void updateCommand_handle_shouldHappyPath() throws DmFriendGeneralServiceException {
         // given: some mock responses
-        Mockito.when(mockService.read(Mockito.anyLong())).thenReturn("Thorin");
+        Mockito.when(mockService.read(Mockito.anyString())).thenReturn("Thorin");
         Mockito.when(mockService.update(Mockito.any())).thenReturn("is my dog's name");
         Mockito.when(mockPrinter.print(Mockito.any())).thenReturn("He's a good boy");
 

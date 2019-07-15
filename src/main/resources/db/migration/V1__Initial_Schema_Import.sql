@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS `dm_friend`;
-
-USE dm_friend;
 
 CREATE TABLE `properties` (
     `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
