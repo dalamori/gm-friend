@@ -226,6 +226,7 @@ public class CreatureServiceImpl implements CreatureService {
 
                 if (propertyIdMap.containsKey(property.getId())) {
                     propertiesToRemove.remove(propertyIdMap.get(property.getId()));
+                    property = propertyService.update(property);
                 }
 
                 savedCreature.getPropertyMap().put(property.getName(), property);

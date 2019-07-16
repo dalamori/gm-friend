@@ -37,7 +37,7 @@ import java.util.Map;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Category(UnitTest.class)
-public class PropertySetCommandUnitTests {
+public class PropertySetCommandUnitTest {
 
     // a test class with the requisite interface.
     public class PropertyWidget implements HasProperties, Serializable {

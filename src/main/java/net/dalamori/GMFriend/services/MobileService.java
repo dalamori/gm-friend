@@ -4,7 +4,7 @@ import net.dalamori.GMFriend.exceptions.MobileException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Mobile;
 
-public interface MobileService {
+public interface MobileService extends SimpleCrudeService<Mobile> {
 
     Mobile create(Mobile mobile) throws MobileException;
 

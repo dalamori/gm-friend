@@ -222,6 +222,7 @@ public class MobileServiceImpl implements MobileService {
 
                 if (propertyIdMap.containsKey(property.getId())) {
                     propertiesToRemove.remove(propertyIdMap.get(property.getId()));
+                    property = propertyService.update(property);
                 }
 
                 savedMobile.getPropertyMap().put(property.getName(), property);
@@ -293,6 +294,7 @@ public class MobileServiceImpl implements MobileService {
         mobile.setCreatureId(creature.getId());
         mobile.setName(resolveMobName(creature.getName()));
         mobile.setOwner(creature.getOwner());
+        mobile.setPrivacy(creature.getPrivacy());
 
         if (creature.getPropertyMap().containsKey(config.getCreaturePropertyMaxHpName())) {
             Property value = creature.getPropertyMap().get(config.getCreaturePropertyMaxHpName());

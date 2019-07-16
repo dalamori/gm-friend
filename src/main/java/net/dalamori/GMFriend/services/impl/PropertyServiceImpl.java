@@ -350,7 +350,7 @@ public class PropertyServiceImpl implements PropertyService {
         while(keys.hasNext()) {
             String key = keys.next();
 
-            if (propertyMap.get(key).getName() != key) {
+            if (!propertyMap.get(key).getName().equals(key)) {
                 return false;
             }
         }

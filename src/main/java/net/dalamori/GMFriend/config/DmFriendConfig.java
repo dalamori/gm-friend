@@ -47,7 +47,7 @@ public class DmFriendConfig {
     @Value("${interpreter.printer.bullet:▸}")
     private String interpreterPrinterBullet;
 
-    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n}")
+    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-\n}")
     private String interpreterPrinterHr;
 
     @Value("${location.here.globalName:__HERE__}")
