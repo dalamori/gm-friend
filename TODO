@@ -1,0 +1,6 @@
+* add caching of global vars to propertyService, add map lookup function;
+* add new setGlobalVar command widget
+* refactor usages of "$HERE" against new global property map, command widget
+* finish mobile list functionality, including custom printer with special indicator for $ACTIVE mob
+* add "turn" command with following sub-commands: next, show, done (next advances $ACTIVE, show displays, done resets)
+* REMOVE THIS TODO FILE!!!

@@ -55,6 +55,9 @@ public class DmFriendConfig {
 
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
+
+    @Value("${mobiles.active.globalName:__ACTIVE__}")
+    private String mobileActiveGlobalName;
 }
 
 

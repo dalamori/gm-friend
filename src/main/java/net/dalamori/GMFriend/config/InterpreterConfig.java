@@ -78,6 +78,7 @@ public class InterpreterConfig {
             printerFactory = new PrinterFactory();
             printerFactory.setConfig(config);
             printerFactory.setCreatureService(creatureService);
+            printerFactory.setPropertyService(propertyService);
         }
 
         return printerFactory;
@@ -93,12 +94,12 @@ public class InterpreterConfig {
 
         String rootHelp = "GM's Friend Main Help:\n" + config.getInterpreterPrinterHr() +
                 "__Commands__:\n" +
-                bulletPrefix + "creature [...] - Creature commands; see \"creature help\" for more info\n" +
+                bulletPrefix + "cret [...] - Creature commands; see \"creature help\" for more info\n" +
                 bulletPrefix + "goto [LOCATION_NAME/ID] - shortcut for \"location move\"; sets $HERE\n" +
                 bulletPrefix + "help - displays this message\n" +
                 bulletPrefix + "here - shortcut for \"location here\"; displays $HERE\n" +
-                bulletPrefix + "location [...] - Location commands; see \"location help\" for more info\n" +
-                bulletPrefix + "mobile [...] - Mobile commands; see \"mobile help\" for more info\n" +
+                bulletPrefix + "room [...] - Location commands; see \"location help\" for more info\n" +
+                bulletPrefix + "mob [...] - Mobile commands; see \"mobile help\" for more info\n" +
                 bulletPrefix + "note [...] - Note commands; see \"note help\" for more info\n" +
                 "\n\r";
         InfoCommand help = new InfoCommand();
@@ -116,7 +117,9 @@ public class InterpreterConfig {
 
         // aliases
         commandMap.put("?", commandMap.get("help"));
+        commandMap.put("cret", commandMap.get("creature"));
         commandMap.put("room", commandMap.get("location"));
+        commandMap.put("mob", commandMap.get("mobile"));
 
         return unprefixedRoot;
     }
@@ -242,7 +245,7 @@ public class InterpreterConfig {
                 bullet + " location remove [ID/NAME] - deletes a location\n" +
                 bullet + " location show [ID/NAME] - shows a location\n" +
                 bullet + " location unlink [ORIGIN_ID/NAME] [DEST_ID/NAME] - removes the link from origin to the given location\n" +
-                bullet + " location unnote [LOCATION_NAME/ID] [NOTE_NAME/ID]\n" +
+                bullet + " location unnote [LOCATION_NAME/ID] [NOTE_NAME/ID] - removes a note from the given location\n" +
                 "\n\r";
 
         // LOCATION HELP
@@ -437,7 +440,7 @@ public class InterpreterConfig {
                 Iterator<LocationLink> iterator = parent.getLinks().iterator();
                 while (iterator.hasNext()) {
                     LocationLink link = iterator.next();
-                    if (link.getDestination().getId() == child.getId()) {
+                    if (link.getDestination().getId().equals(child.getId())) {
                         iterator.remove();
                         break;
                     }
@@ -500,8 +503,11 @@ public class InterpreterConfig {
                 bullet + " mobile damage [ID/NAME] [AMOUNT] - reduces a mobiles HP by an amount\n" +
                 bullet + " mobile delete [ID/NAME] - deletes a mobile\n" +
                 bullet + " mobile heal [ID/NAME] [AMOUNT] - increases a mobiles HP by an amount\n" +
-                bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE†] - creates a new mobile from a creature template, optionally with initiative\n" +
+                bullet + " mobile init [ID/NAME] [NEW_INITIATIVE] - sets a mobile's initiative\n" +
                 bullet + " mobile kill [ID/NAME] - insta-kill a mobile\n" +
+                bullet + " mobile maxHp [ID/NAME] [NEW_MAX] - sets a mobile's max HP, doesn't heal them.\n" +
+                bullet + " mobile move [ID/NAME] [NEW_POSITION] - moves a mobile to a new postion\n" +
+                bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE†] - creates a new mobile from a creature template, optionally with initiative\n" +
                 bullet + " mobile set [MOBILE_ID/NAME] [KEY] [...] - sets a property of the mobile, see full syntax below\n" +
                 bullet + " mobile show [MOBILE_ID/NAME] - displays a mobile\n" +
                 bullet + " mobile restore [ID/NAME] - resets a mobile to alive, and full hp\n" +
@@ -538,8 +544,22 @@ public class InterpreterConfig {
         // MOBILE HEAL
         mobileHandler.getMap().put("heal", mobileHeal());
 
-        // MOBILE NEW
-        mobileHandler.getMap().put("new", mobileNew());
+        // MOBILE INIT
+        UpdateCommand<Mobile> init = new UpdateCommand<Mobile>() {
+            @Override
+            public Mobile updateItem(CommandContext context, Mobile item) throws DmFriendGeneralServiceException {
+                String argument = getCurrentCommandPart(context, 1);
+                if (StringUtils.isNumeric(argument)) {
+                    item.setInitiative(Integer.valueOf(argument));
+                } else {
+                    throw new InterpreterException("unable to parse numeric initiative in mobile_init");
+                }
+                return item;
+            }
+        };
+        init.setService(mobileService);
+        init.setPrinter(printerFactory.getMobilePrinter());
+        mobileHandler.getMap().put("init", init);
 
         // MOBILE KILL
         UpdateCommand<Mobile> kill = new UpdateCommand<Mobile>() {
@@ -553,6 +573,66 @@ public class InterpreterConfig {
         kill.setService(mobileService);
         kill.setPrinter(printerFactory.getMobilePrinter());
         mobileHandler.getMap().put("kill", kill);
+
+        // MOBILE MAX HP
+        UpdateCommand<Mobile> maxHp = new UpdateCommand<Mobile>() {
+            @Override
+            public Mobile updateItem(CommandContext context, Mobile item) throws DmFriendGeneralServiceException {
+                String argument = getCurrentCommandPart(context, 1);
+                if (StringUtils.isNumeric(argument)) {
+                    item.setMaxHp(Long.valueOf(argument));
+
+                    // don't let us overflow...
+                    if (item.getMaxHp() < item.getHp()) {
+                        item.setHp(item.getMaxHp());
+                    }
+                } else {
+                    throw new InterpreterException("couldn't parse new HP");
+                }
+
+                return item;
+            }
+        };
+        maxHp.setPrinter(printerFactory.getMobilePrinter());
+        maxHp.setService(mobileService);
+        mobileHandler.getMap().put("maxHp", maxHp);
+        mobileHandler.getMap().put("maxhp", maxHp);
+
+        // MOBILE NEW
+        mobileHandler.getMap().put("new", mobileNew());
+
+        // MOBILE POS;
+        UpdateCommand<Mobile> move = new UpdateCommand<Mobile>() {
+            @Override
+            public Mobile updateItem(CommandContext context, Mobile item) throws DmFriendGeneralServiceException {
+                String position = getRemainingCommand(context, 1);
+                if (position.length() > 0) {
+                    item.setPosition(position);
+                } else {
+                    throw new InterpreterException("new position cannot be a blank string");
+                }
+                return item;
+            }
+        };
+        move.setService(mobileService);
+        move.setPrinter(printerFactory.getMobilePrinter());
+        mobileHandler.getMap().put("pos", move);
+        mobileHandler.getMap().put("position", move);
+        mobileHandler.getMap().put("move", move);
+
+        // MOBILE RESTORE
+        UpdateCommand<Mobile> restore = new UpdateCommand<Mobile>() {
+            @Override
+            public Mobile updateItem(CommandContext context, Mobile mobile) throws DmFriendGeneralServiceException {
+                mobile.setHp(mobile.getMaxHp());
+                mobile.setAlive(true);
+                return mobile;
+            }
+        };
+        restore.setPrinter(printerFactory.getMobilePrinter());
+        restore.setService(mobileService);
+        mobileHandler.getMap().put("res", restore);
+        mobileHandler.getMap().put("restore", restore);
 
         // MOBILE SET
         PropertySetCommand<Mobile> propertySet = new PropertySetCommand<>();
@@ -569,20 +649,6 @@ public class InterpreterConfig {
         show.setService(mobileService);
         show.setPrinter(printerFactory.getMobilePrinter());
         mobileHandler.getMap().put("show", show);
-
-        // MOBILE RESTORE
-        UpdateCommand<Mobile> restore = new UpdateCommand<Mobile>() {
-            @Override
-            public Mobile updateItem(CommandContext context, Mobile mobile) throws DmFriendGeneralServiceException {
-                mobile.setHp(mobile.getMaxHp());
-                mobile.setAlive(true);
-                return mobile;
-            }
-        };
-        restore.setPrinter(printerFactory.getMobilePrinter());
-        restore.setService(mobileService);
-        mobileHandler.getMap().put("res", restore);
-        mobileHandler.getMap().put("restore", restore);
 
         // MOBILE UNSET
         PropertyDeleteCommand<Mobile> propertyUnset = new PropertyDeleteCommand<>();

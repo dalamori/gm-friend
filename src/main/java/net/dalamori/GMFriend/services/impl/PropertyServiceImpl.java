@@ -216,11 +216,11 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         try {
-            Group propertys = resolveGlobalPropertiesGroup();
+            Group properties = resolveGlobalPropertiesGroup();
 
-            propertys.getContents().add(property.getId());
+            properties.getContents().add(property.getId());
 
-            groupService.update(propertys);
+            groupService.update(properties);
         } catch (GroupException ex) {
             log.warn("PropertyServiceImpl::attachToCreature failed to attach property {} to global context", property, ex);
             throw new PropertyException("unable to attach property to creature", ex);
@@ -240,11 +240,11 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         try {
-            Group propertys = resolveCreaturePropertiesGroup(creature);
+            Group properties = resolveCreaturePropertiesGroup(creature);
 
-            propertys.getContents().remove(property.getId());
+            properties.getContents().remove(property.getId());
 
-            groupService.update(propertys);
+            groupService.update(properties);
         } catch (GroupException ex) {
             log.warn("PropertyServiceImpl::detachToCreature failed to detach property {} from creature {}", property, creature, ex);
             throw new PropertyException("unable to detach property from creature", ex);
@@ -388,7 +388,7 @@ public class PropertyServiceImpl implements PropertyService {
 
         String name = String.format("%s%s%d",
                 config.getSystemGroupPrefix(),
-                config.getSystemGroupCreaturePropertyAction(),
+                config.getSystemGroupMobilePropertyAction(),
                 mobile.getId());
 
         return groupService.resolveSystemGroup(name, PropertyType.PROPERTY);
