@@ -31,6 +31,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -797,10 +798,13 @@ public class PropertyServiceUnitTest {
         Mockito.when(mockGroupService.resolveSystemGroup(Mockito.any(), Mockito.any())).thenReturn(globalPropertyGroup);
 
         // when: I get global properties
-        List<Property> result = service.getGlobalProperties();
+        Map<String, Property> result = service.getGlobalProperties();
 
         // then: i expect to see the the mock propertyList passed back as retval
-        Assert.assertEquals("should return propertyList", propertyList, result);
+        Assert.assertEquals("should return a map with 3 properties", 3, result.size());
+        Assert.assertEquals("should contain Property A", propertyList.get(0), result.get("Property A"));
+        Assert.assertEquals("should contain Property B", propertyList.get(1), result.get("Property B"));
+        Assert.assertEquals("should contain Property C", propertyList.get(2), result.get("Property C"));
 
         // and: I expect to see the group contents passed to the propertyDao
         Mockito.verify(mockDao).findAllById(findIdsCaptor.capture());

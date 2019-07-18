@@ -23,6 +23,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -295,15 +296,19 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<Property> getGlobalProperties() throws PropertyException {
-        List<Property> list = new ArrayList<>();
+    public Map<String, Property> getGlobalProperties() throws PropertyException {
+        Map<String, Property> map = new HashMap<>();
 
         try {
             Group notes = resolveGlobalPropertiesGroup();
+            Iterator<Property> globalProperties = propertyDao.findAllById(notes.getContents()).iterator();
 
-            propertyDao.findAllById(notes.getContents()).iterator().forEachRemaining(list::add);
+            while(globalProperties.hasNext()) {
+                Property item = globalProperties.next();
+                map.put(item.getName(), item);
+            }
 
-            return list;
+            return map;
 
         } catch (GroupException ex) {
             throw new PropertyException("Unable to retrieve creature properties", ex);

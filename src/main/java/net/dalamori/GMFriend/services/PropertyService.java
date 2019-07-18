@@ -7,6 +7,7 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.interfaces.HasProperties;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PropertyService {
     Property copy(Property property) throws PropertyException;
@@ -33,7 +34,7 @@ public interface PropertyService {
 
     void detachFromGlobalContext(Property property) throws PropertyException;
 
-    List<Property> getGlobalProperties() throws PropertyException;
+    Map<String, Property> getGlobalProperties() throws PropertyException;
 
     List<Property> getCreatureProperties(Creature creature) throws PropertyException;
 

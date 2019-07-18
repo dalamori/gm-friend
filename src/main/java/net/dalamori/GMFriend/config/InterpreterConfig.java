@@ -309,15 +309,8 @@ public class InterpreterConfig {
         DisplayCommand<Location> here = new DisplayCommand<Location>(){
             @Override
             public Location getItem(CommandContext context) throws DmFriendGeneralServiceException {
-                List<Property> globalProps = propertyService.getGlobalProperties();
-                Property found = null;
-
-                for (Property prop : globalProps ) {
-                    if (prop.getName().equals(config.getLocationHereGlobalName())) {
-                        found = prop;
-                        break;
-                    }
-                }
+                Map<String, Property> globalProps = propertyService.getGlobalProperties();
+                Property found = globalProps.getOrDefault(config.getLocationHereGlobalName(), null);
 
                 if (found != null && found.getType() == PropertyType.LOCATION
                         && StringUtils.isNumeric(found.getValue())) {
@@ -365,15 +358,8 @@ public class InterpreterConfig {
 
             @Override
             public Location save(Location item) throws DmFriendGeneralServiceException {
-                List<Property> globalProps = propertyService.getGlobalProperties();
-                Property found = null;
-
-                for(Property prop : globalProps ) {
-                    if (prop.getName().equals(config.getLocationHereGlobalName())) {
-                        found = prop;
-                        break;
-                    }
-                }
+                Map<String, Property> globalProps = propertyService.getGlobalProperties();
+                Property found = globalProps.getOrDefault(config.getLocationHereGlobalName(), null);
 
                 if (found == null) {
                     // not found, make new and save to list.
@@ -392,7 +378,6 @@ public class InterpreterConfig {
 
                     propertyService.update(found);
                 }
-
 
                 return item;
             }

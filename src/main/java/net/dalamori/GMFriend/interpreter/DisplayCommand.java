@@ -6,7 +6,6 @@ import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.services.SimpleCrudeService;
-import org.apache.commons.lang3.StringUtils;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -21,7 +20,7 @@ public class DisplayCommand<T> extends AbstractCommand {
         try {
             context.setResponse(printer.print(getItem(context)));
         } catch (DmFriendGeneralServiceException ex) {
-            throw new InterpreterException("failed to display", ex);
+            throw new InterpreterException("failed to display: ".concat(ex.getMessage()), ex);
         }
     }
 

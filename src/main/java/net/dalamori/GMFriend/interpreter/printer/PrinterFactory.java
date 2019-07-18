@@ -3,6 +3,7 @@ package net.dalamori.GMFriend.interpreter.printer;
 import lombok.Data;
 import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.CreatureException;
+import net.dalamori.GMFriend.exceptions.PropertyException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Location;
 import net.dalamori.GMFriend.models.LocationLink;
@@ -12,6 +13,7 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.services.PropertyService;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -27,6 +29,7 @@ public class PrinterFactory {
     private PrettyPrinter<Mobile> mobilePrinter;
     private PrettyPrinter<Note> notePrinter;
     private PrettyPrinter<Iterable<Note>> noteListPrinter;
+    private PrettyPrinter<Property> propertyPrinter;
 
 
     private String HR = "---";
@@ -40,6 +43,7 @@ public class PrinterFactory {
 
 
     public PrettyPrinter<Creature> getCreaturePrinter() {
+        PrettyPrinter<Property> propPrinter = getPropertyPrinter();
 
         if (creaturePrinter == null) {
             creaturePrinter = new PrettyPrinter<Creature>() {
@@ -52,7 +56,7 @@ public class PrinterFactory {
                         output += "__Properties__:\n";
 
                         for (Map.Entry<String, Property> entry : creature.getPropertyMap().entrySet()) {
-                            output = printProperty(output, entry.getValue());
+                            output += propPrinter.print(entry.getValue());
                         }
                     }
 
@@ -71,8 +75,12 @@ public class PrinterFactory {
                 @Override
                 public String print(Iterable<Mobile> object) {
                     String output = HR;
-
-
+                    Property active;
+                    try {
+                        active = propertyService.getGlobalProperties().getOrDefault(config.getMobileActiveGlobalName(), null);
+                    } catch (PropertyException ex) {
+                        active = null;
+                    }
 
                     return output;
                 }
@@ -124,6 +132,7 @@ public class PrinterFactory {
 
 
     public PrettyPrinter<Mobile> getMobilePrinter() {
+        PrettyPrinter<Property> propPrinter = getPropertyPrinter();
         if (mobilePrinter == null) {
             mobilePrinter = new PrettyPrinter<Mobile>() {
                 @Override
@@ -142,7 +151,7 @@ public class PrinterFactory {
                     if (mobile.getPropertyMap().size() > 0) {
                         output += "__Properties__:\n";
                         for (Map.Entry<String, Property> entry : mobile.getPropertyMap().entrySet()) {
-                            output = printProperty(output, entry.getValue());
+                            output += propPrinter.print(entry.getValue());
                         }
                     }
 
@@ -202,6 +211,28 @@ public class PrinterFactory {
         return noteListPrinter;
     }
 
+    public PrettyPrinter<Property> getPropertyPrinter() {
+        if (propertyPrinter == null) {
+            propertyPrinter = new PrettyPrinter<Property>() {
+                @Override
+                public String print(Property property) {
+                    String typeIndicator = "";
+                    switch (property.getType()) {
+                        case CREATURE:  typeIndicator = "(Creature) ";  break;
+                        case LOCATION:  typeIndicator = "(Location) ";  break;
+                        case MOBILE:    typeIndicator = "(Mobile) ";    break;
+                        case NOTE:      typeIndicator = "(Note) ";      break;
+                    }
+
+                    return String.format("%s **%s**: %s%s\n",
+                            BULLET, PrettyPrinter.formatName(property.getName()), typeIndicator, property.getValue());
+                }
+            };
+        }
+        return propertyPrinter;
+    }
+
+
     private String getCreatureName(Long id) {
         try {
             Creature creature = creatureService.read(id);
@@ -211,16 +242,4 @@ public class PrinterFactory {
         }
     }
 
-    private String printProperty(String output, Property property) {
-        String typeIndicator = "";
-        switch (property.getType()) {
-            case CREATURE:  typeIndicator = "(Creature) ";  break;
-            case LOCATION:  typeIndicator = "(Location) ";  break;
-            case MOBILE:    typeIndicator = "(Mobile) ";    break;
-            case NOTE:      typeIndicator = "(Note) ";      break;
-        }
-
-        return output.concat(String.format("%s **%s**: %s%s\n",
-                BULLET, PrettyPrinter.formatName(property.getName()), typeIndicator, property.getValue()));
-    }
 }
