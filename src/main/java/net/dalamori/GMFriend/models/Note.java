@@ -14,6 +14,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 
 @Data
@@ -28,6 +29,7 @@ public class Note {
     @Lob
     @NotBlank
     @Column(nullable = false, name = "BODY")
+    @Size(max = 1850)
     private String body;
 
     @NotBlank

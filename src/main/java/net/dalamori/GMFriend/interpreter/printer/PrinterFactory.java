@@ -1,5 +1,6 @@
 package net.dalamori.GMFriend.interpreter.printer;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import lombok.Data;
 import net.dalamori.GMFriend.config.DmFriendConfig;
 import net.dalamori.GMFriend.exceptions.CreatureException;
@@ -13,7 +14,6 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.services.PropertyService;
 
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -30,6 +30,7 @@ public class PrinterFactory {
     private PrettyPrinter<Note> notePrinter;
     private PrettyPrinter<Iterable<Note>> noteListPrinter;
     private PrettyPrinter<Property> propertyPrinter;
+    private PrettyPrinter<Map<String, Property>> propertyMapPrinter;
 
 
     private String HR = "---";
@@ -43,7 +44,7 @@ public class PrinterFactory {
 
 
     public PrettyPrinter<Creature> getCreaturePrinter() {
-        PrettyPrinter<Property> propPrinter = getPropertyPrinter();
+        PrettyPrinter<Map<String, Property>> propPrinter = getPropertyMapPrinter();
 
         if (creaturePrinter == null) {
             creaturePrinter = new PrettyPrinter<Creature>() {
@@ -53,11 +54,7 @@ public class PrinterFactory {
                             HR;
 
                     if (creature.getPropertyMap().size() > 0) {
-                        output += "__Properties__:\n";
-
-                        for (Map.Entry<String, Property> entry : creature.getPropertyMap().entrySet()) {
-                            output += propPrinter.print(entry.getValue());
-                        }
+                        output += propPrinter.print(creature.getPropertyMap());
                     }
 
                     output += HR + String.format("by: %s\n\r", creature.getOwner());
@@ -73,16 +70,77 @@ public class PrinterFactory {
         if (initiativeListPrinter == null) {
             initiativeListPrinter = new PrettyPrinter<Iterable<Mobile>>() {
                 @Override
-                public String print(Iterable<Mobile> object) {
-                    String output = HR;
-                    Property active;
+                public String print(Iterable<Mobile> mobileList) {
+
+                    // $ACTIVE lookup
+                    int activeInit = 0;
+                    String activeName = "";
                     try {
-                        active = propertyService.getGlobalProperties().getOrDefault(config.getMobileActiveGlobalName(), null);
+                        Property active = propertyService.getGlobalProperties().getOrDefault(config.getMobileActiveGlobalName(), null);
+                        if (active != null) {
+                            int indexOfDelimiter = active.getValue().indexOf('|');
+                            if (indexOfDelimiter > 0) {
+                                activeInit = Integer.valueOf(active.getValue().substring(0,indexOfDelimiter));
+                                activeName = active.getValue().substring(indexOfDelimiter + 1);
+                            }
+
+                        }
                     } catch (PropertyException ex) {
-                        active = null;
+                        activeInit = 0;
+                        activeName = "";
                     }
 
-                    return output;
+                    // Output
+                    StringBuilder output = new StringBuilder();
+                    output.append(HR);
+                    boolean activeFound = false;
+                    for (Mobile mobile : mobileList) {
+                        // check for active interstitial, and print empty line if needed.
+                        if (!activeFound) {
+                            if (activeInit <= mobile.getInitiative()) {
+                                if (mobile.getName().compareToIgnoreCase(activeName) < 0) {
+                                    // init pointer is before mobile; draw focus line
+                                    output.append(String.format("%s (%d) -- No Active Mobile --\n",
+                                            config.getInterpreterPrinterEmphasisBullet(), activeInit));
+                                    activeFound = true;
+
+                                    // show list entry with next notation
+                                    output.append(String.format("%s (%d) %s (Next Active)\n",
+                                            config.getInterpreterPrinterBullet(),
+                                            mobile.getInitiative(),
+                                            mobile.getName()));
+                                } else if (mobile.getName().compareToIgnoreCase(activeName) == 0) {
+                                    // init pointer hit
+                                    output.append(String.format("%s (%d) %s (Active)\n",
+                                            config.getInterpreterPrinterEmphasisBullet(),
+                                            mobile.getInitiative(),
+                                            mobile.getName()));
+                                    activeFound = true;
+                                } else {
+                                    // mob is tied w/ init pointer, but has already taken turn.
+                                    output.append(String.format("%s (%d) %s\n",
+                                            config.getInterpreterPrinterBullet(),
+                                            mobile.getInitiative(),
+                                            mobile.getName()));
+                                }
+                            } else {
+                                // mob has init lower than active, has already taken turn.
+                                output.append(String.format("%s (%d) %s\n",
+                                        config.getInterpreterPrinterBullet(),
+                                        mobile.getInitiative(),
+                                        mobile.getName()));
+                            }
+                        } else {
+                            // active was already found
+                            output.append(String.format("%s (%d) %s\n",
+                                    config.getInterpreterPrinterBullet(),
+                                    mobile.getInitiative(),
+                                    mobile.getName()));
+                        }
+
+                    }
+
+                    return output.toString();
                 }
             };
         }
@@ -132,7 +190,7 @@ public class PrinterFactory {
 
 
     public PrettyPrinter<Mobile> getMobilePrinter() {
-        PrettyPrinter<Property> propPrinter = getPropertyPrinter();
+        PrettyPrinter<Map<String,Property>> propPrinter = getPropertyMapPrinter();
         if (mobilePrinter == null) {
             mobilePrinter = new PrettyPrinter<Mobile>() {
                 @Override
@@ -149,10 +207,7 @@ public class PrinterFactory {
                             BULLET, mobile.getHp(), mobile.getMaxHp(), mobile.getInitiative(), mobile.getPosition());
 
                     if (mobile.getPropertyMap().size() > 0) {
-                        output += "__Properties__:\n";
-                        for (Map.Entry<String, Property> entry : mobile.getPropertyMap().entrySet()) {
-                            output += propPrinter.print(entry.getValue());
-                        }
+                        output += propPrinter.print(mobile.getPropertyMap());
                     }
 
                     output += HR + String.format("by: %s\n\r", mobile.getOwner());
@@ -188,14 +243,12 @@ public class PrinterFactory {
             noteListPrinter = new PrettyPrinter<Iterable<Note>>() {
                 @Override
                 public String print(Iterable<Note> noteList) {
-                    PrettyPrinter<Note> notePrinter = getNotePrinter();
                     int index = 0;
                     String output = HR;
                     for (Note note : noteList) {
                         index++;
                         output = output
-                                .concat(String.format("**[#%d]:**\n", index))
-                                .concat(notePrinter.print(note))
+                                .concat(String.format("%s **[N#%d]** %s\n", BULLET, note.getId(), note.getTitle()))
                                 .concat("\n\r");
                     }
 
@@ -230,6 +283,26 @@ public class PrinterFactory {
             };
         }
         return propertyPrinter;
+    }
+
+    public PrettyPrinter<Map<String, Property>> getPropertyMapPrinter() {
+        if (propertyMapPrinter == null) {
+
+            PrettyPrinter<Property> propPrinter = getPropertyPrinter();
+            propertyMapPrinter = new PrettyPrinter<Map<String, Property>>() {
+                @Override
+                public String print(Map<String, Property> propertyMap) {
+                    StringBuilder output = new StringBuilder();
+                    output.append("__Properties__:\n");
+                    for (Map.Entry<String, Property> entry : propertyMap.entrySet()) {
+                        output.append(propPrinter.print(entry.getValue()));
+                    }
+
+                    return output.toString();
+                }
+            };
+        }
+        return propertyMapPrinter;
     }
 
 

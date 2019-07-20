@@ -8,6 +8,7 @@ import net.dalamori.GMFriend.interpreter.AbstractCommand;
 import net.dalamori.GMFriend.interpreter.CommandContext;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 
@@ -15,6 +16,8 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode(callSuper = false)
 public class DiscordInterpreter extends ListenerAdapter {
+
+    private static final int MAX_DISCORD_MESSAGE_LENGTH = 1995;  // actually 2000, but I want a little room at the end.
 
     AbstractCommand interpreter;
 
@@ -28,7 +31,12 @@ public class DiscordInterpreter extends ListenerAdapter {
         CommandContext context = interpret(event.getMessage().getContentRaw(), event.getAuthor().getAsTag());
 
         if (context.getResponse() != null) {
-            event.getChannel().sendMessage(context.getResponse()).queue();
+            String output = context.getResponse();
+            if (output.length() > MAX_DISCORD_MESSAGE_LENGTH) {
+                output = StringUtils.abbreviate(output, "...", MAX_DISCORD_MESSAGE_LENGTH);
+            }
+
+            event.getChannel().sendMessage(output).queue();
         }
     }
 
@@ -37,7 +45,7 @@ public class DiscordInterpreter extends ListenerAdapter {
 
         context.setOwner(owner);
 
-        context.setCommand(Arrays.asList(rawCommand.split("\\s")));
+        context.setCommand(Arrays.asList(rawCommand.split("\\s+")));
 
         context.setIndex(0);
         try {
