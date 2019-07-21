@@ -1,10 +1,12 @@
 package net.dalamori.GMFriend.config;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.exceptions.NoteException;
+import net.dalamori.GMFriend.exceptions.PropertyException;
 import net.dalamori.GMFriend.interpreter.AbstractCommand;
 import net.dalamori.GMFriend.interpreter.AttachCommand;
 import net.dalamori.GMFriend.interpreter.CommandContext;
@@ -17,6 +19,7 @@ import net.dalamori.GMFriend.interpreter.MapCommand;
 import net.dalamori.GMFriend.interpreter.PropertyDeleteCommand;
 import net.dalamori.GMFriend.interpreter.PropertySetCommand;
 import net.dalamori.GMFriend.interpreter.UpdateCommand;
+import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.interpreter.printer.PrinterFactory;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Location;
@@ -36,6 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.sound.sampled.Line;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -884,6 +889,155 @@ public class InterpreterConfig {
         pingHandler.setInfo("Pong!");
 
         return pingHandler;
+    }
+
+
+    private AbstractCommand turn() {
+        MapCommand turnHandler = new MapCommand();
+        InfoCommand turnInfo = new InfoCommand();
+        String bullet = config.getInterpreterPrinterBullet();
+
+        String turnHelp = "turn help:\n" +
+                config.getInterpreterPrinterHr() +
+                "__Subcommands__:\n" +
+                bullet + " turn done - end the current turn immediately\n" +
+                bullet + " turn help - show this help message\n" +
+                bullet + " turn next - move to the next mobile's turn, making them $ACTIVE\n" +
+                bullet + " turn show - show the $ACTIVE mobile\n" +
+                "\n\r";
+
+        // TURN HELP
+        turnInfo.setInfo(turnHelp);
+        turnHandler.setDefaultAction(turnInfo);
+
+        // TURN DONE
+        AbstractCommand done = new AbstractCommand() {
+            @Override
+            public void handle(CommandContext context) throws InterpreterException {
+                try {
+                    Property activeProperty = propertyService.getGlobalProperties()
+                            .getOrDefault(config.getMobileActiveGlobalName(), null);
+
+                    if (activeProperty != null) {
+                        propertyService.detachFromGlobalContext(activeProperty);
+                        propertyService.delete(activeProperty);
+
+                        context.setResponse("OK");
+                        return;
+                    }
+                    context.setResponse("Already there, boss.");
+
+                } catch (PropertyException ex) {
+                    throw new InterpreterException("failed to delete $ACTIVE: ".concat(ex.getMessage()), ex);
+                }
+            }
+        };
+
+        // TURN NEXT
+        turnHandler.getMap().put("next", turnNext());
+
+        return turnHandler;
+    }
+
+    private AbstractCommand turnNext() {
+        return new AbstractCommand() {
+            @Override
+            public void handle(CommandContext context) throws InterpreterException {
+
+                try {
+                    int activeInit = 0;
+                    String activeName = "";
+                    Property activeProperty = propertyService.getGlobalProperties()
+                            .getOrDefault(config.getMobileActiveGlobalName(), null);
+
+                    // figure out active name, init
+                    if (activeProperty == null) {
+                        // construct new $ACTIVE property
+                        activeProperty.setType(PropertyType.STRING);
+                        activeProperty.setOwner(config.getSystemGroupOwner());
+                        activeProperty.setName(config.getMobileActiveGlobalName());
+                        activeProperty.setPrivacy(PrivacyType.NORMAL);
+                    } else {
+                        // parse the existing values out of $ACTIVE
+                        int indexOfDelimiter = activeProperty.getValue().indexOf('|');
+                        if (indexOfDelimiter > 0) {
+                            activeInit = Integer.valueOf(activeProperty.getValue().substring(0,indexOfDelimiter));
+                            activeName = activeProperty.getValue().substring(indexOfDelimiter + 1);
+                        }
+                    }
+
+                    for (Mobile mobile : mobileService.initiativeList()) {
+                        // don't disturb the dead.
+                        if (!mobile.isAlive()) {
+                            continue;
+                        }
+
+                        if (
+                                // either; this is our new next because it's the first alive we found over last init;
+                                (mobile.getInitiative() > activeInit) ||
+                                // or: this is our new next because its tied for init, and string compares higher than saved val
+                                (mobile.getInitiative() == activeInit && activeName.compareToIgnoreCase(mobile.getName()) < 0)) {
+
+                            // then we found what we were looking for; save, reply, and return
+                            saveAndRespond(context, mobile, activeProperty);
+                            return;
+                        }
+                    }
+
+                    // got to the end of the list...
+                    context.setResponse("**END of TURN**\n\r");
+                    if (activeProperty.getId() != null) {
+                        propertyService.detachFromGlobalContext(activeProperty);
+                        propertyService.delete(activeProperty);
+                    }
+
+                    return;
+
+                } catch (DmFriendGeneralServiceException ex) {
+                    throw new InterpreterException("Failed to increment $ACTIVE: ".concat(ex.getMessage()), ex);
+                }
+            }
+
+            private void saveAndRespond(CommandContext context, Mobile mob, Property property) throws PropertyException {
+                PrettyPrinter<Mobile> printer = printerFactory.getMobilePrinter();
+                property.setValue(String.format("%d|%s", mob.getInitiative(), mob.getName()));
+
+                if (property.getId() == null) {
+                    Property savedProperty = propertyService.create(property);
+                    propertyService.attachToGlobalContext(savedProperty);
+
+                    context.setResponse(printer.print(mob));
+                } else {
+                    context.setResponse(printer.print(mob));
+                    propertyService.update(property);
+                }
+            }
+        };
+    }
+
+    private AbstractCommand turnShow() {
+        DisplayCommand<Mobile> show = new DisplayCommand<Mobile>(){
+            @Override
+            public Mobile getItem(CommandContext context) throws DmFriendGeneralServiceException {
+
+                String activeName = "";
+                Property activeProperty = propertyService.getGlobalProperties()
+                        .getOrDefault(config.getMobileActiveGlobalName(), null);
+
+                int indexOfDelimiter = activeProperty.getValue().indexOf('|');
+                if (indexOfDelimiter > 0) {
+                    activeName = activeProperty.getValue().substring(indexOfDelimiter + 1);
+                }
+
+                if (mobileService.exists(activeName)) {
+                    return mobileService.read(activeName);
+                } else {
+                    throw new InterpreterException("Can't find $ACTIVE mobile");
+                }
+            }
+        };
+        show.setPrinter(printerFactory.getMobilePrinter());
+        return show;
     }
 
 
