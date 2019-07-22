@@ -311,6 +311,29 @@ public class MobileServiceUnitTest {
         Assert.assertEquals("should contain propB", propB, result.getPropertyMap().get("B"));
     }
 
+    @Test
+    public void mobileService_read_shouldHappyPathByIdString() throws MobileException, PropertyException {
+        // given: a test subject to look up
+        Mockito.when(mockDao.findById(64L)).thenReturn(Optional.of(savedBucky));
+
+        // and: a list of properties to look up
+        List<Property> properties = new ArrayList<>();
+        properties.add(propA);
+        properties.add(propB);
+        Mockito.when(mockPropertyService.getMobileProperties(savedBucky)).thenReturn(properties);
+
+        // when: I look the mobile up by Id
+        Mobile result = service.read("64");
+
+        // then: I expect to get a copy of savedBucky
+        Assert.assertEquals("should be savedBucky", savedBucky, result);
+
+        // and: he should have the two properties I mocked the list for.
+        Assert.assertEquals("should have 2 properties", 2, result.getPropertyMap().size());
+        Assert.assertEquals("should contain propA", propA, result.getPropertyMap().get("A"));
+        Assert.assertEquals("should contain propB", propB, result.getPropertyMap().get("B"));
+    }
+
     @Test(expected = MobileException.class)
     public void mobileService_read_shouldHandleNullStrings() throws MobileException, PropertyException {
         // given: a test subject to look up
@@ -327,6 +350,71 @@ public class MobileServiceUnitTest {
 
         // then: I expect to fail
         Assert.fail("Should be unable to look up null");
+    }
+
+    @Test
+    public void mobileService_exists_shouldHappyPathById() {
+        // given: a mock response
+        Mockito.when(mockDao.existsById(49L)).thenReturn(true);
+
+        // when: I test existence
+        boolean result = service.exists(49L);
+
+        // then: I should get true
+        Assert.assertTrue("should return true", result);
+        Mockito.verify(mockDao).existsById(49L);
+    }
+
+    @Test
+    public void mobileService_exists_shouldReturnFalseWhenNullId() {
+        // when: I test existence
+        Long id = null;
+        boolean result = service.exists(id);
+
+        // then: I should get false
+        Assert.assertFalse("should return false", result);
+
+        // and: I shouldn't see any calls to the dao
+        Mockito.verifyZeroInteractions(mockDao);
+    }
+
+    @Test
+    public void mobileService_exists_shouldHappyPathByName() {
+        // given: a mock response
+        Mockito.when(mockDao.existsByName("bucky")).thenReturn(true);
+
+        // when: I test existence
+        boolean result = service.exists("bucky");
+
+        // then: I should get true
+        Assert.assertTrue("should return true", result);
+        Mockito.verify(mockDao).existsByName("bucky");
+    }
+
+    @Test
+    public void mobileService_exists_shouldHappyPathByIdString() {
+        // given: a mock response
+        Mockito.when(mockDao.existsById(49L)).thenReturn(true);
+
+        // when: I test existence
+        boolean result = service.exists("49");
+
+        // then: I should get true
+        Assert.assertTrue("should return true", result);
+        Mockito.verify(mockDao).existsById(49L);
+    }
+
+    @Test
+    public void mobileService_exists_shouldReturnFalseWhenNullString() {
+        // when: I test existence
+        String name = null;
+        boolean result = service.exists(name);
+
+        // then: I should get false
+        Assert.assertFalse("should return false", result);
+
+        // and: I shouldn't see any calls to the dao
+        Mockito.verifyZeroInteractions(mockDao);
     }
 
     @Test

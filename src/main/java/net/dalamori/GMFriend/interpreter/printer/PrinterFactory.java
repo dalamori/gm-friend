@@ -98,7 +98,7 @@ public class PrinterFactory {
                         // check for active interstitial, and print empty line if needed.
                         if (!activeFound) {
                             if (activeInit <= mobile.getInitiative()) {
-                                if (mobile.getName().compareToIgnoreCase(activeName) < 0) {
+                                if (mobile.getName().compareToIgnoreCase(activeName) > 0) {
                                     // init pointer is before mobile; draw focus line
                                     output.append(String.format("%s (%d) -- No Active Mobile --\n",
                                             config.getInterpreterPrinterEmphasisBullet(), activeInit));

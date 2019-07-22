@@ -27,10 +27,10 @@ public class GlobalPropertySetCommand extends PropertySetCommand<HasProperties> 
             Property target = getProperty(context);
 
             // back the index up one, updateProperty assumes an extra arg we dont have.
-            int index = context.getIndex();
-            context.setIndex(index - 1);
+            // int index = context.getIndex();
+            // context.setIndex(index - 1);
             target = updateProperty(context, target);
-            context.setIndex(index);
+            // context.setIndex(index);
 
             target = saveProperty(target);
             context.setResponse(propertyPrinter.print(target));

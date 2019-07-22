@@ -121,6 +121,7 @@ public class InterpreterConfig {
         commandMap.put("mobile", mobile());
         commandMap.put("note", note());
         commandMap.put("ping", ping());
+        commandMap.put("turn", turn());
         commandMap.put("var", var());
 
         // aliases
@@ -932,9 +933,13 @@ public class InterpreterConfig {
                 }
             }
         };
+        turnHandler.getMap().put("done", done);
 
         // TURN NEXT
         turnHandler.getMap().put("next", turnNext());
+
+        // TURN SHOW
+        turnHandler.getMap().put("show", turnShow());
 
         return turnHandler;
     }
@@ -953,6 +958,7 @@ public class InterpreterConfig {
                     // figure out active name, init
                     if (activeProperty == null) {
                         // construct new $ACTIVE property
+                        activeProperty = new Property();
                         activeProperty.setType(PropertyType.STRING);
                         activeProperty.setOwner(config.getSystemGroupOwner());
                         activeProperty.setName(config.getMobileActiveGlobalName());
@@ -1023,6 +1029,10 @@ public class InterpreterConfig {
                 String activeName = "";
                 Property activeProperty = propertyService.getGlobalProperties()
                         .getOrDefault(config.getMobileActiveGlobalName(), null);
+
+                if (activeProperty == null) {
+                    throw new InterpreterException("No active turn.");
+                }
 
                 int indexOfDelimiter = activeProperty.getValue().indexOf('|');
                 if (indexOfDelimiter > 0) {

@@ -47,7 +47,7 @@ public class DmFriendConfig {
     @Value("${interpreter.printer.bullet:▸}")
     private String interpreterPrinterBullet;
 
-    @Value("${interpreter.printer.emphasisBullet:→}")
+    @Value("${interpreter.printer.emphasisBullet:★}")
     private String interpreterPrinterEmphasisBullet;
 
     @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-\n}")
