@@ -1,6 +1,7 @@
 package net.dalamori.GMFriend.interpreter;
 
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
+import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Location;
@@ -77,7 +78,7 @@ public class GlobalPropertySetCommandUnitTest {
         // given: a sample context
         context = new CommandContext();
         context.setOwner(OWNER);
-        context.setIndex(1);
+        context.setIndex(2);
 
         // and: a sample "test" property to manipulate
         property = new Property();
@@ -138,7 +139,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithDecimal() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid decimal command
         context.setCommand(DECIMAL_COMMAND);
 
         // when: I invoke the command
@@ -158,7 +159,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithCreature() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid Creature command
         context.setCommand(CREATURE_COMMAND);
 
         // and: a sample creature to look up
@@ -188,7 +189,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithLocation() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid location command
         context.setCommand(LOCATION_COMMAND);
 
         // and: a sample location to look up
@@ -218,7 +219,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithMobile() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid mobile command
         context.setCommand(MOBILE_COMMAND);
 
         // and: a sample mobile to look up
@@ -248,7 +249,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithNote() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid note command
         context.setCommand(NOTE_COMMAND);
 
         // and: a sample note to look up
@@ -278,7 +279,7 @@ public class GlobalPropertySetCommandUnitTest {
 
     @Test
     public void globalPropertySetCommand_handle_shouldHappyPathWithString() throws DmFriendGeneralServiceException {
-        // given: a valid integer command
+        // given: a valid string command
         context.setCommand(STRING_COMMAND);
 
         // when: I invoke the command
@@ -297,33 +298,153 @@ public class GlobalPropertySetCommandUnitTest {
     }
 
     @Test
-    public void globalPropertySetCommand_handle_shouldHappyPathWhenAdding() {
+    public void globalPropertySetCommand_handle_shouldHappyPathWhenAdding() throws DmFriendGeneralServiceException {
+        // given: a valid addition command
+        context.setCommand(ADD_COMMAND);
 
+        // and: a numeric property
+        property.setType(PropertyType.DECIMAL);
+        property.setValue("543.21");
+        property.setId(13L);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.assertEquals("should reply with printer response", PRINTER_OUTPUT, context.getResponse());
+
+        // and: I expect to see property saved with the correct value
+
+        Mockito.verify(mockPropertyService).update(propertyCaptor.capture());
+        Property result = propertyCaptor.getValue();
+        Assert.assertEquals("should set property to the proper value", "568.21", result.getValue());
+        Assert.assertEquals("should set property to DECIMAL", PropertyType.DECIMAL, result.getType());
     }
 
     @Test
-    public void globalPropertySetCommand_handle_shouldHappyPathWhenAddingDefault() {
+    public void globalPropertySetCommand_handle_shouldHappyPathWhenAddingDefault() throws DmFriendGeneralServiceException {
+        // given: a valid defaulting addition command
+        context.setCommand(ADD_DEFAULT_COMMAND);
 
+        // and: a numeric property
+        property.setType(PropertyType.DECIMAL);
+        property.setValue("543.21");
+        property.setId(13L);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.assertEquals("should reply with printer response", PRINTER_OUTPUT, context.getResponse());
+
+        // and: I expect to see property saved with the correct value
+
+        Mockito.verify(mockPropertyService).update(propertyCaptor.capture());
+        Property result = propertyCaptor.getValue();
+        Assert.assertEquals("should set property to the proper value", "544.21", result.getValue());
+        Assert.assertEquals("should set property to DECIMAL", PropertyType.DECIMAL, result.getType());
+    }
+
+    @Test(expected = InterpreterException.class)
+    public void globalPropertySetCommand_handle_shouldFailWhenAddingToNotFound() throws DmFriendGeneralServiceException {
+        // given: a valid addition command
+        context.setCommand(ADD_COMMAND);
+
+        // and: "test" property doesn't exist to be incremented.
+        propertyMap.remove("test");
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.fail("should refuse to increment a global var which doesn't already exist");
     }
 
     @Test
-    public void globalPropertySetCommand_handle_shouldHappyPathWhenSubtracting() {
+    public void globalPropertySetCommand_handle_shouldHappyPathWhenSubtracting() throws DmFriendGeneralServiceException {
+        // given: a valid subtraction command
+        context.setCommand(SUBTRACT_COMMAND);
 
+        // and: a numeric property
+        property.setType(PropertyType.DECIMAL);
+        property.setValue("543.21");
+        property.setId(13L);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.assertEquals("should reply with printer response", PRINTER_OUTPUT, context.getResponse());
+
+        // and: I expect to see property saved with the correct value
+
+        Mockito.verify(mockPropertyService).update(propertyCaptor.capture());
+        Property result = propertyCaptor.getValue();
+        Assert.assertEquals("should set property to the proper value", "531.21", result.getValue());
+        Assert.assertEquals("should set property to DECIMAL", PropertyType.DECIMAL, result.getType());
     }
 
     @Test
-    public void globalPropertySetCommand_handle_shouldHappyPathWhenSubtractingDefault() {
+    public void globalPropertySetCommand_handle_shouldHappyPathWhenSubtractingDefault() throws DmFriendGeneralServiceException {
+        // given: a valid subtraction command
+        context.setCommand(SUBTRACT_DEFAULT_COMMAND);
 
+        // and: a numeric property
+        property.setType(PropertyType.INTEGER);
+        property.setValue("543");
+        property.setId(13L);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.assertEquals("should reply with printer response", PRINTER_OUTPUT, context.getResponse());
+
+        // and: I expect to see property saved with the correct value
+
+        Mockito.verify(mockPropertyService).update(propertyCaptor.capture());
+        Property result = propertyCaptor.getValue();
+        Assert.assertEquals("should set property to the proper value", "542", result.getValue());
+        Assert.assertEquals("should set property to INTEGER", PropertyType.INTEGER, result.getType());
     }
 
-    @Test
-    public void globalPropertySetCommand_handle_shouldFailWhenNoKey() {
+    @Test(expected = InterpreterException.class)
+    public void globalPropertySetCommand_handle_shouldFailWhenSubtractingFromNotFound() throws DmFriendGeneralServiceException {
+        // given: a valid addition command
+        context.setCommand(SUBTRACT_COMMAND);
 
+        // and: "test" property doesn't exist to be incremented.
+        propertyMap.remove("test");
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to succeed, with the retval from my printer in response
+        Assert.fail("should refuse to decrement a global var which doesn't already exist");
     }
 
-    @Test
-    public void globalPropertySetCommand_handle_shouldFailWhenNoValue() {
-        Assert.fail("Stub!");
+    @Test(expected = InterpreterException.class)
+    public void globalPropertySetCommand_handle_shouldFailWhenNoKey() throws DmFriendGeneralServiceException {
+        // given: a valid integer set command
+        context.setCommand(NO_KEY_COMMAND);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to fail
+        Assert.fail("should throw an error failing to parse the command");
+    }
+
+    @Test(expected = InterpreterException.class)
+    public void globalPropertySetCommand_handle_shouldFailWhenNoValue() throws DmFriendGeneralServiceException {
+        // given: a valid integer set command
+        context.setCommand(NO_VALUE_COMMAND);
+
+        // when: I invoke the command
+        command.handle(context);
+
+        // then: I expect to fail
+        Assert.fail("should throw an error failing to parse the command");
     }
 
 }
