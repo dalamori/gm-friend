@@ -416,6 +416,36 @@ public class LocationServiceUnitTest {
         Assert.assertEquals("link should go There", there, result.getLinks().get(0).getDestination());
     }
 
+    @Test
+    public void locationService_read_shouldHappyPathByIdString() throws LocationException, NoteException {
+        // given: a subject
+        Mockito.when(mockDao.findById(45L)).thenReturn(Optional.of(here));
+
+        // and: some notes
+        List<Note> notes = new ArrayList<>();
+        notes.add(noteA);
+        notes.add(noteB);
+        Mockito.when(mockNoteService.getLocationNotes(Mockito.any())).thenReturn(notes);
+
+        // and: a link
+        Set<LocationLink> links = new HashSet<>();
+        links.add(hereThereLink);
+        Mockito.when(mockLinkDao.findAllByOrigin(Mockito.any())).thenReturn(links);
+
+        // when: I try to read by id
+        Location result = service.read("45");
+
+        // then: I should get a copy of here, with attached notes and link
+        Assert.assertEquals("should return here", here, result);
+
+        Assert.assertEquals("should have 2 notes", 2, result.getNotes().size());
+        Assert.assertTrue("should contain noteA", result.getNotes().contains(noteA));
+        Assert.assertTrue("should contain noteB", result.getNotes().contains(noteB));
+
+        Assert.assertEquals("should have a link to there", 1, result.getLinks().size());
+        Assert.assertEquals("link should go There", there, result.getLinks().get(0).getDestination());
+    }
+
     @Test(expected = LocationException.class)
     public void locationService_read_shouldFailWhenNotFoundByName() throws LocationException, NoteException {
         // given: a subject
@@ -485,6 +515,19 @@ public class LocationServiceUnitTest {
         // then: I expect to see that passed thru to the dao, and the dao's retval returned
         Assert.assertTrue("should get returnvalue from the dao", result);
         Mockito.verify(mockDao).existsByName(name);
+    }
+
+    @Test
+    public void locationService_exists_shouldHappyPathByIdString() {
+        // given: a mock reply
+        Mockito.when(mockDao.existsById(42L)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists("42");
+
+        // then: I expect to see that passed thru to the dao, and the dao's retval returned
+        Assert.assertTrue("should get return value from the dao", result);
+        Mockito.verify(mockDao).existsById(42L);
     }
 
     @Test

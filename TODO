@@ -1,0 +1,8 @@
+X Add Unit Tests for numeric string cases on service impls
+X Add Unit tests for new setGlobalVar command widget
+A refactor usages of "$HERE" against new global property map, command widget
+X finish mobile list functionality, including custom printer with special indicator for $ACTIVE mob
+X add "turn" command with following sub-commands: next, show, done (next advances $ACTIVE, show displays, done resets)
+X Add Integration Tests for interpreter menus
+X ensure "delete" is a synonym for "remove" in all menus
+* REMOVE THIS TODO FILE!!!

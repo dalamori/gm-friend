@@ -244,6 +244,78 @@ public class CreatureServiceUnitTest {
     }
 
     @Test
+    public void creatureService_exists_shouldHappyPathById() {
+        // given: a reply from the dao
+        Mockito.when(mockDao.existsById(33L)).thenReturn(true);
+
+        // when: I test existance by Id
+        boolean result = service.exists(33L);
+
+        // then: I expect to get the result form the dao
+        Assert.assertTrue("should return true", result);
+
+        // and: I expect to see thr right call to the dao
+        Mockito.verify(mockDao).existsById(33L);
+    }
+
+    @Test
+    public void creatureService_exists_shouldReturnFalseWhenNullId() {
+        // when: I lookup existence by null ID
+        Long id = null;
+        boolean result = service.exists(id);
+
+        // then: I expect to get false
+        Assert.assertFalse("should return false", result);
+
+        // and: I don't expect to see any calls to the dao
+        Mockito.verifyZeroInteractions(mockDao);
+
+    }
+
+    @Test
+    public void creatureService_exists_shouldHappyPathByName() {
+        // given: a reply from the dao
+        Mockito.when(mockDao.existsByName("steve")).thenReturn(true);
+
+        // when: I test existance by Id
+        boolean result = service.exists("steve");
+
+        // then: I expect to get the result form the dao
+        Assert.assertTrue("should return true", result);
+
+        // and: I expect to see thr right call to the dao
+        Mockito.verify(mockDao).existsByName(Mockito.eq("steve"));
+    }
+
+    @Test
+    public void creatureService_exists_shouldHappyPathByIdString() {
+        // given: a reply from the dao
+        Mockito.when(mockDao.existsById(33L)).thenReturn(true);
+
+        // when: I test existance by Id
+        boolean result = service.exists("33");
+
+        // then: I expect to get the result form the dao
+        Assert.assertTrue("should return true", result);
+
+        // and: I expect to see thr right call to the dao
+        Mockito.verify(mockDao).existsById(33L);
+    }
+
+    @Test
+    public void creatureService_exists_shouldReturnFalseWhenNullString() {
+        // when: I lookup existence by null ID
+        String name = null;
+        boolean result = service.exists(name);
+
+        // then: I expect to get false
+        Assert.assertFalse("should return false", result);
+
+        // and: I don't expect to see any calls to the dao
+        Mockito.verifyZeroInteractions(mockDao);
+    }
+
+    @Test
     public void creatureService_read_shouldHappyPathById() throws CreatureException, PropertyException {
         // given: a test subject to look up
         Mockito.when(mockDao.findById(STEVE_ID)).thenReturn(Optional.of(savedSteve));
@@ -298,6 +370,29 @@ public class CreatureServiceUnitTest {
 
         // when: I look the creature up by Id
         Creature result = service.read("steve");
+
+        // then: I expect to get a copy of savedSteve
+        Assert.assertEquals("should be savedSteve", savedSteve, result);
+
+        // and: he should have the two properties I mocked the list for.
+        Assert.assertEquals("should have 2 properties", 2, result.getPropertyMap().size());
+        Assert.assertEquals("should contain propA", propA, result.getPropertyMap().get("A"));
+        Assert.assertEquals("should contain propB", propB, result.getPropertyMap().get("B"));
+    }
+
+    @Test
+    public void creatureService_read_shouldHappyPathByStringId() throws CreatureException, PropertyException {
+        // given: a test subject to look up
+        Mockito.when(mockDao.findById(73L)).thenReturn(Optional.of(savedSteve));
+
+        // and: a list of properties to look up
+        List<Property> properties = new ArrayList<>();
+        properties.add(propA);
+        properties.add(propB);
+        Mockito.when(mockPropertyService.getCreatureProperties(savedSteve)).thenReturn(properties);
+
+        // when: I look the creature up by Id
+        Creature result = service.read("73");
 
         // then: I expect to get a copy of savedSteve
         Assert.assertEquals("should be savedSteve", savedSteve, result);

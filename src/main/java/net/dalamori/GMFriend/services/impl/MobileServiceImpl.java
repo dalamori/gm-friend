@@ -12,6 +12,7 @@ import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.MobileDao;
 import net.dalamori.GMFriend.services.MobileService;
 import net.dalamori.GMFriend.services.PropertyService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -120,6 +122,10 @@ public class MobileServiceImpl implements MobileService {
 
     @Override
     public Mobile read(String name) throws MobileException {
+        if (StringUtils.isNumeric(name)) {
+            return read(Long.valueOf(name));
+        }
+
         Optional<Mobile> result = mobileDao.findByName(name);
 
         if (!result.isPresent()) {
@@ -154,6 +160,9 @@ public class MobileServiceImpl implements MobileService {
     @Override
     public boolean exists(String name) {
         if (name != null) {
+            if (StringUtils.isNumeric(name)) {
+                return mobileDao.existsById(Long.valueOf(name));
+            }
             return mobileDao.existsByName(name);
         }
 
@@ -214,6 +223,7 @@ public class MobileServiceImpl implements MobileService {
 
                 if (propertyIdMap.containsKey(property.getId())) {
                     propertiesToRemove.remove(propertyIdMap.get(property.getId()));
+                    property = propertyService.update(property);
                 }
 
                 savedMobile.getPropertyMap().put(property.getName(), property);
@@ -285,11 +295,12 @@ public class MobileServiceImpl implements MobileService {
         mobile.setCreatureId(creature.getId());
         mobile.setName(resolveMobName(creature.getName()));
         mobile.setOwner(creature.getOwner());
+        mobile.setPrivacy(creature.getPrivacy());
 
         if (creature.getPropertyMap().containsKey(config.getCreaturePropertyMaxHpName())) {
             Property value = creature.getPropertyMap().get(config.getCreaturePropertyMaxHpName());
 
-            if (value.getType() == PropertyType.INTEGER) {
+            if (value.getType().equals(PropertyType.INTEGER)) {
                 mobile.setMaxHp(Integer.parseInt(value.getValue()));
                 mobile.setHp(mobile.getMaxHp());
             } else {
@@ -303,7 +314,7 @@ public class MobileServiceImpl implements MobileService {
         try {
             for (Property prop : creature.getPropertyMap().values()) {
                 // skip the hp field
-                if (prop.getName() == config.getCreaturePropertyMaxHpName()) {
+                if (prop.getName().equals(config.getCreaturePropertyMaxHpName())) {
                     continue;
                 }
 
@@ -317,6 +328,11 @@ public class MobileServiceImpl implements MobileService {
         }
 
         return savedMobile;
+    }
+
+    public List<Mobile> initiativeList() throws MobileException {
+        List<Mobile> initiativeList = mobileDao.findAllOrderByInitiativeAscNameAsc();
+        return initiativeList;
     }
 
     private String resolveMobName(String name) throws MobileException {

@@ -57,5 +57,9 @@ flyway {
 	url = 'jdbc:mysql://localhost:3306/dm_friend'
 	user = 'friend'
 	password = 'ChangeMe'
-	schemas = ['dm_friend']
+	schemas = ['dm_friend', 'dm_friend_test']
+}
+
+test {
+	systemProperty "spring.datasource.url", "jdbc:mysql://localhost:3306/dm_friend_test"
 }

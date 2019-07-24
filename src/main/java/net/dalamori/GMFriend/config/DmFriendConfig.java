@@ -17,7 +17,7 @@ public class DmFriendConfig {
     @Value("${creatures.properties.maxHpName:maxHp}")
     private String creaturePropertyMaxHpName;
 
-    @Value("${groups.system.collisionPrefix:__LOST+FOUND=}")
+    @Value("${groups.system.collisionPrefix:!!LOST+FOUND=}")
     private String systemGroupCollisionPrefix;
 
     @Value("${groups.system.creaturePropertyAction:Properties for Creature #}")
@@ -47,14 +47,20 @@ public class DmFriendConfig {
     @Value("${interpreter.printer.bullet:▸}")
     private String interpreterPrinterBullet;
 
-    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n}")
+    @Value("${interpreter.printer.emphasisBullet:★}")
+    private String interpreterPrinterEmphasisBullet;
+
+    @Value("${interpreter.printer.hr:-=-=-=-=-=-=-=-=-=-\n}")
     private String interpreterPrinterHr;
 
-    @Value("${location.here.globalName:__HERE__}")
+    @Value("${location.here.globalName:__$HERE__}")
     private String locationHereGlobalName;
 
     @Value("${mobiles.name.maxRetries:50}")
     private int mobileNameMaxRetries;
+
+    @Value("${mobiles.active.globalName:__$ACTIVE__}")
+    private String mobileActiveGlobalName;
 }
 
 

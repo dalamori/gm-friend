@@ -6,7 +6,7 @@ public abstract class AbstractCommand {
 
     public abstract void handle(CommandContext context) throws InterpreterException;
 
-    public String getCurrentCommandPart(CommandContext context, int offset) {
+    public static String getCurrentCommandPart(CommandContext context, int offset) {
         String cmdPart = "";
         int requestedIndex = context.getIndex() + offset;
         if (requestedIndex < context.getCommand().size()) {
@@ -16,11 +16,11 @@ public abstract class AbstractCommand {
         return cmdPart;
     }
 
-    public String getCurrentCommandPart(CommandContext context) {
+    public static String getCurrentCommandPart(CommandContext context) {
         return getCurrentCommandPart(context, 0);
     }
 
-    public String getRemainingCommand(CommandContext context, int offset) {
+    public static String getRemainingCommand(CommandContext context, int offset) {
         String remaining = "";
         int fromIndex = context.getIndex() + 1 + offset;
 
@@ -33,8 +33,9 @@ public abstract class AbstractCommand {
         return remaining;
     }
 
-    public String getRemainingCommand(CommandContext context) {
+    public static String getRemainingCommand(CommandContext context) {
         return getRemainingCommand(context, 0);
     }
+
 }
 

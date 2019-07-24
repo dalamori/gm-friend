@@ -57,8 +57,8 @@ public class AttachCommandUnitTest {
     @Test
     public void attachCommand_shouldHappyPath() throws DmFriendGeneralServiceException {
         // given: mock responses for the services
-        Mockito.when(mockStringService.read(Mockito.anyLong())).thenReturn("STRING");
-        Mockito.when(mockLongService.read(Mockito.anyLong())).thenReturn(76543L);
+        Mockito.when(mockStringService.read(Mockito.anyString())).thenReturn("STRING");
+        Mockito.when(mockLongService.read(Mockito.anyString())).thenReturn(76543L);
         Mockito.when(mockPrinter.print(Mockito.anyString())).thenReturn("CHOCOLATE");
 
         Mockito.when(mockStringService.update(Mockito.anyString())).thenReturn("FOO");
@@ -70,8 +70,8 @@ public class AttachCommandUnitTest {
         Assert.assertEquals("should be CHOCOLATE", "CHOCOLATE", context.getResponse());
 
         // and: I expect to see the proper calls to my mock.
-        Mockito.verify(mockStringService).read(3L);
-        Mockito.verify(mockLongService).read(4L);
+        Mockito.verify(mockStringService).read("3");
+        Mockito.verify(mockLongService).read("4");
         Mockito.verify(mockPrinter).print("FOO");
 
         // and: I expect to see the proper data passed into updateItem method

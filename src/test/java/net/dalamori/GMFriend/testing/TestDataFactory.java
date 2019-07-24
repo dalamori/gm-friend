@@ -1,5 +1,6 @@
 package net.dalamori.GMFriend.testing;
 
+import net.dalamori.GMFriend.interpreter.CommandContext;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Group;
 import net.dalamori.GMFriend.models.Location;
@@ -11,6 +12,7 @@ import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
 
 import java.security.PublicKey;
+import java.util.Arrays;
 
 public class TestDataFactory {
 
@@ -22,6 +24,15 @@ public class TestDataFactory {
             + "dui eu tempor. Pellentesque id auctor est, at malesuada magna. Ut dignissim elit sit amet tempus "
             + "imperdiet. Phasellus consequat dignissim tortor, eu eleifend sapien pulvinar at. Quisque lacinia dui "
             + "eget lectus pharetra, ut ullamcorper tellus finibus. Donec at pharetra nunc, eget feugiat elit.";
+
+    public static CommandContext makeContextFromCommandLine(String commandLine) {
+        CommandContext context = new CommandContext();
+        context.setOwner(OWNER_NAME);
+        context.setIndex(0);
+        context.setCommand(Arrays.asList(commandLine.split("\\s")));
+
+        return context;
+    }
 
     // Creatures
     public static Creature makeCreature(Long id, String name) {

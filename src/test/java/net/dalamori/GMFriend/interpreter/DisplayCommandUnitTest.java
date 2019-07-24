@@ -6,7 +6,6 @@ import net.dalamori.GMFriend.services.SimpleCrudeService;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ public class DisplayCommandUnitTest {
     private CommandContext context;
 
     private static final List<String> RAW_STRING = Arrays.asList("lorem ipsum dolor sit amet".split("\\s"));
-    private static final List<String> RAW_NUMERIC = Arrays.asList("1 2 3 4 5".split("\\s"));
 
     @Before
     public void setup() {
@@ -45,28 +43,7 @@ public class DisplayCommandUnitTest {
     }
 
     @Test
-    public void displayCommand_handle_shouldHappyPathById() throws DmFriendGeneralServiceException {
-        // given: a service which will return Strings for IDs
-        Mockito.when(mockService.read(Mockito.anyLong())).thenReturn("OH-SNAP");
-        Mockito.when(mockPrinter.print(Mockito.anyString())).thenReturn("BINGO!");
-
-        // and: a numeric command;
-        context.setCommand(RAW_NUMERIC);
-        context.setIndex(2);
-
-        // when: I invoke the command
-        command.handle(context);
-
-        // then: I expect to see the result from my mock
-        Assert.assertEquals("should return BINGO", "BINGO!", context.getResponse());
-
-        // and: I should see the proper calls to my mocks
-        Mockito.verify(mockPrinter).print("OH-SNAP");
-        Mockito.verify(mockService).read(3L);
-    }
-
-    @Test
-    public void displayCommand_handle_shouldHappyPathByName() throws DmFriendGeneralServiceException {
+    public void displayCommand_handle_shouldHappyPath() throws DmFriendGeneralServiceException {
         // given: a service which will return Strings for IDs
         Mockito.when(mockService.read(Mockito.anyString())).thenReturn("OH-SNAP");
         Mockito.when(mockPrinter.print(Mockito.anyString())).thenReturn("BINGO!");

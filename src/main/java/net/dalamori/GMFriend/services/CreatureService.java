@@ -4,7 +4,7 @@ import net.dalamori.GMFriend.exceptions.CreatureException;
 import net.dalamori.GMFriend.models.Creature;
 import net.dalamori.GMFriend.models.Mobile;
 
-public interface CreatureService {
+public interface CreatureService extends SimpleCrudeService<Creature> {
 
     Creature create(Creature creature) throws CreatureException;
 

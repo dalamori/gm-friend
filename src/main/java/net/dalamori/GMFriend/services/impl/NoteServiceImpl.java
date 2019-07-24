@@ -14,6 +14,7 @@ import net.dalamori.GMFriend.models.interfaces.HasNotes;
 import net.dalamori.GMFriend.repository.NoteDao;
 import net.dalamori.GMFriend.services.GroupService;
 import net.dalamori.GMFriend.services.NoteService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,6 +90,10 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public Note read(String title) throws NoteException {
+        if (StringUtils.isNumeric(title)) {
+            return read(Long.valueOf(title));
+        }
+
         Optional<Note> result = noteDao.findByTitle(title);
 
         if (!result.isPresent()) {
@@ -111,6 +116,9 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public boolean exists(String title) {
         if (title != null) {
+            if (StringUtils.isNumeric(title)) {
+                return noteDao.existsById(Long.valueOf(title));
+            }
             return noteDao.existsByTitle(title);
         }
 

@@ -23,6 +23,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -216,11 +217,11 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         try {
-            Group propertys = resolveGlobalPropertiesGroup();
+            Group properties = resolveGlobalPropertiesGroup();
 
-            propertys.getContents().add(property.getId());
+            properties.getContents().add(property.getId());
 
-            groupService.update(propertys);
+            groupService.update(properties);
         } catch (GroupException ex) {
             log.warn("PropertyServiceImpl::attachToCreature failed to attach property {} to global context", property, ex);
             throw new PropertyException("unable to attach property to creature", ex);
@@ -240,11 +241,11 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         try {
-            Group propertys = resolveCreaturePropertiesGroup(creature);
+            Group properties = resolveCreaturePropertiesGroup(creature);
 
-            propertys.getContents().remove(property.getId());
+            properties.getContents().remove(property.getId());
 
-            groupService.update(propertys);
+            groupService.update(properties);
         } catch (GroupException ex) {
             log.warn("PropertyServiceImpl::detachToCreature failed to detach property {} from creature {}", property, creature, ex);
             throw new PropertyException("unable to detach property from creature", ex);
@@ -295,15 +296,19 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<Property> getGlobalProperties() throws PropertyException {
-        List<Property> list = new ArrayList<>();
+    public Map<String, Property> getGlobalProperties() throws PropertyException {
+        Map<String, Property> map = new HashMap<>();
 
         try {
             Group notes = resolveGlobalPropertiesGroup();
+            Iterator<Property> globalProperties = propertyDao.findAllById(notes.getContents()).iterator();
 
-            propertyDao.findAllById(notes.getContents()).iterator().forEachRemaining(list::add);
+            while(globalProperties.hasNext()) {
+                Property item = globalProperties.next();
+                map.put(item.getName(), item);
+            }
 
-            return list;
+            return map;
 
         } catch (GroupException ex) {
             throw new PropertyException("Unable to retrieve creature properties", ex);
@@ -350,7 +355,7 @@ public class PropertyServiceImpl implements PropertyService {
         while(keys.hasNext()) {
             String key = keys.next();
 
-            if (propertyMap.get(key).getName() != key) {
+            if (!propertyMap.get(key).getName().equals(key)) {
                 return false;
             }
         }
@@ -388,7 +393,7 @@ public class PropertyServiceImpl implements PropertyService {
 
         String name = String.format("%s%s%d",
                 config.getSystemGroupPrefix(),
-                config.getSystemGroupCreaturePropertyAction(),
+                config.getSystemGroupMobilePropertyAction(),
                 mobile.getId());
 
         return groupService.resolveSystemGroup(name, PropertyType.PROPERTY);

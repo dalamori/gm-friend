@@ -12,15 +12,15 @@ import net.dalamori.GMFriend.services.SimpleCrudeService;
 @Slf4j
 @EqualsAndHashCode(callSuper = false)
 public abstract class CreateCommand<T> extends AbstractCommand {
-    private SimpleCrudeService<T> service;
-    private PrettyPrinter<T> printer;
+    protected SimpleCrudeService<T> service;
+    protected PrettyPrinter<T> printer;
 
     @Override
     public void handle(CommandContext context) throws InterpreterException {
         try {
 
-            T savedItem = service.create(buildItem(context));
-            afterSave(savedItem);
+            T savedItem = save(buildItem(context));
+            afterSave(context, savedItem);
             context.setResponse(printer.print(savedItem));
         } catch (DmFriendGeneralServiceException ex) {
             log.debug("CreateCommand::handle Failed to create item", ex);
@@ -29,9 +29,13 @@ public abstract class CreateCommand<T> extends AbstractCommand {
 
     }
 
-    public abstract T buildItem(CommandContext context);
+    public abstract T buildItem(CommandContext context) throws DmFriendGeneralServiceException;
 
-    public void afterSave(T obj) throws DmFriendGeneralServiceException {
+    public T save(T obj) throws DmFriendGeneralServiceException {
+        return service.create(obj);
+    }
+
+    public void afterSave(CommandContext context, T obj) throws DmFriendGeneralServiceException {
         return;
     }
 }

@@ -147,6 +147,21 @@ public class NoteServiceUnitTest {
         Assert.assertEquals("notes should match", result, savedNote);
     }
 
+    @Test
+    public void noteService_read_shouldHappyPathByIdString() throws NoteException {
+        // given: a sample note saved in the db
+        Mockito.when(mockDao.findById(NOTE_ID)).thenReturn(Optional.of(savedNote));
+
+        // when: I try to lookup by ID
+        Note result = service.read(NOTE_ID.toString());
+
+        // then: I should succeed;
+        Assert.assertEquals("notes should match", result, savedNote);
+
+        // and: it should look up by Id
+        Mockito.verify(mockDao).findById(NOTE_ID);
+    }
+
     @Test(expected = NoteException.class)
     public void noteService_read_shouldFailWhenNotFoundById() throws NoteException {
         // given; nothing saved in the DB
@@ -195,6 +210,19 @@ public class NoteServiceUnitTest {
         // then: I expect to get a short-circuit false
         Assert.assertFalse("should get default return", result);
         Mockito.verify(mockDao, Mockito.never()).existsById(id);
+    }
+
+    @Test
+    public void noteService_exists_shouldHappyPathByIdString() {
+        // given: a mock reply
+        Mockito.when(mockDao.existsById(62L)).thenReturn(true);
+
+        // when: I poll the service
+        boolean result = service.exists("62");
+
+        // then: I expect to get my result
+        Assert.assertTrue("should get true", result);
+        Mockito.verify(mockDao).existsById(62L);
     }
 
     @Test

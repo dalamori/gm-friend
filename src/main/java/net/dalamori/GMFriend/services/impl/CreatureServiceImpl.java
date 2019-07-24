@@ -13,6 +13,8 @@ import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.repository.CreatureDao;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.services.PropertyService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -123,6 +125,10 @@ public class CreatureServiceImpl implements CreatureService {
 
     @Override
     public Creature read(String name) throws CreatureException {
+        if (StringUtils.isNumeric(name)) {
+            return read(Long.valueOf(name));
+        }
+
         Optional<Creature> result = creatureDao.findByName(name);
 
         if (!result.isPresent()) {
@@ -157,6 +163,9 @@ public class CreatureServiceImpl implements CreatureService {
     @Override
     public boolean exists(String name) {
         if (name != null) {
+            if (StringUtils.isNumeric(name)) {
+                return creatureDao.existsById(Long.valueOf(name));
+            }
             return creatureDao.existsByName(name);
         }
 
@@ -217,6 +226,7 @@ public class CreatureServiceImpl implements CreatureService {
 
                 if (propertyIdMap.containsKey(property.getId())) {
                     propertiesToRemove.remove(propertyIdMap.get(property.getId()));
+                    property = propertyService.update(property);
                 }
 
                 savedCreature.getPropertyMap().put(property.getName(), property);

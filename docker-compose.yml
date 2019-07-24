@@ -10,4 +10,4 @@ services:
       MYSQL_PASSWORD: "ChangeMe"
       MYSQL_DATABASE: 'dm_friend'
     volumes:
-      - ./mysql-data/:/var/lib/mysql/
+      - ./mysql-data/a-mysql-image-user-setup.sql:/docker-entrypoint-initdb.d/a-mysql-image-user-setup.sql

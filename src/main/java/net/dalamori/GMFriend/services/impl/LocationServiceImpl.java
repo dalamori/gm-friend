@@ -12,6 +12,7 @@ import net.dalamori.GMFriend.repository.LocationDao;
 import net.dalamori.GMFriend.repository.LocationLinkDao;
 import net.dalamori.GMFriend.services.LocationService;
 import net.dalamori.GMFriend.services.NoteService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,6 +117,10 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     public Location read(String name) throws LocationException {
+        if (StringUtils.isNumeric(name)) {
+            return read(Long.valueOf(name));
+        }
+
         Optional<Location> result = locationDao.findByName(name);
 
         if (!result.isPresent()) {
@@ -149,6 +154,9 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public boolean exists(String name) {
         if (name != null) {
+            if (StringUtils.isNumeric(name)) {
+                return locationDao.existsById(Long.valueOf(name));
+            }
             return locationDao.existsByName(name);
         }
 
