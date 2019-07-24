@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'docker-compose'
 
 group = 'net.dalamori'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 sourceCompatibility = '1.8'
 
 configurations {
