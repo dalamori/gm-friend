@@ -104,9 +104,10 @@ public class InterpreterConfig {
                 bulletPrefix + "goto [LOCATION_NAME/ID] - shortcut for \"location move\"; sets $HERE\n" +
                 bulletPrefix + "help - displays this message\n" +
                 bulletPrefix + "here - shortcut for \"location here\"; displays $HERE\n" +
-                bulletPrefix + "room [...] - Location commands; see \"location help\" for more info\n" +
                 bulletPrefix + "mob [...] - Mobile commands; see \"mobile help\" for more info\n" +
                 bulletPrefix + "note [...] - Note commands; see \"note help\" for more info\n" +
+                bulletPrefix + "room [...] - Location commands; see \"location help\" for more info\n" +
+                bulletPrefix + "turn [...] - turn commands; manipulates $ACTIVE; see \"turn help\" for more info\n" +
                 bulletPrefix + "var [...] - global variable commands; see \"var help\" for more info\n" +
                 "\n\r";
         InfoCommand help = new InfoCommand();
