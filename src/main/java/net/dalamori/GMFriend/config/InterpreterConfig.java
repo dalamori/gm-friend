@@ -504,7 +504,7 @@ public class InterpreterConfig {
                 bullet + " mobile list - show a list of living mobiles sorted by initiative order\n" +
                 bullet + " mobile list all - show a list of all mobiles, sorted by initiative order\n" +
                 bullet + " mobile maxHp [ID/NAME] [NEW_MAX] - sets a mobile's max HP, doesn't heal them.\n" +
-                bullet + " mobile move [ID/NAME] [NEW_POSITION] - moves a mobile to a new postion\n" +
+                bullet + " mobile move [ID/NAME] [NEW_POSITION] - moves a mobile to a new position\n" +
                 bullet + " mobile new [CREATURE_NAME/ID] [INITIATIVE†] - creates a new mobile from a creature template, optionally with initiative\n" +
                 bullet + " mobile set [MOBILE_ID/NAME] [KEY] [...] - sets a property of the mobile, see full syntax on page 2\n" +
                 bullet + " mobile show [MOBILE_ID/NAME] - displays a mobile\n" +
@@ -548,6 +548,7 @@ public class InterpreterConfig {
         DeleteCommand<Mobile> delete = new DeleteCommand<>();
         delete.setService(mobileService);
         mobileHandler.getMap().put("delete", delete);
+        mobileHandler.getMap().put("remove", delete);
 
         // MOBILE HEAL
         mobileHandler.getMap().put("heal", mobileHeal());
@@ -865,7 +866,7 @@ public class InterpreterConfig {
         UpdateCommand<Note> set = new UpdateCommand<Note>() {
             @Override
             public Note updateItem(CommandContext context, Note item) {
-                String value = getCurrentCommandPart(context).concat("\n");
+                String value = getRemainingCommand(context).concat("\n");
                 item.setBody(value);
 
                 return item;

@@ -11,6 +11,7 @@ import net.dalamori.GMFriend.repository.GroupDao;
 import net.dalamori.GMFriend.repository.PropertyDao;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.testing.IntegrationTest;
+import net.dalamori.GMFriend.testing.TestDataFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,18 +41,10 @@ public class CreatureCommandMenuIntegrationTest {
     public GroupDao groupDao;
 
     @Autowired
-    public InterpreterConfig interpreterConfig;
+    public AbstractCommand rootCommand;
 
     @Autowired
     public PropertyDao propertyDao;
-
-    private AbstractCommand rootCommand;
-
-    @Before
-    public void setup() {
-        // get the rootCommand
-        rootCommand = interpreterConfig.getRootCommand();
-    }
 
     @After
     public void teardown() {
@@ -74,7 +67,7 @@ public class CreatureCommandMenuIntegrationTest {
 
         // when: I run the commands:
         for (String commandLine : commands ){
-            CommandContext context = makeContextFromCommandLine(commandLine);
+            CommandContext context = TestDataFactory.makeContextFromCommandLine(commandLine);
             rootCommand.handle(context);
         }
 
@@ -106,7 +99,7 @@ public class CreatureCommandMenuIntegrationTest {
 
         // when: I run the commands:
         for (String commandLine : commands ){
-            CommandContext context = makeContextFromCommandLine(commandLine);
+            CommandContext context = TestDataFactory.makeContextFromCommandLine(commandLine);
             rootCommand.handle(context);
         }
 
@@ -114,13 +107,4 @@ public class CreatureCommandMenuIntegrationTest {
         Assert.assertFalse("Dr Tyson should be gone", creatureDao.existsByName("Neil_DeGrasse_Tyson"));
     }
 
-
-    private CommandContext makeContextFromCommandLine(String commandLine) {
-        CommandContext context = new CommandContext();
-        context.setOwner("Anyone, really...");
-        context.setIndex(0);
-        context.setCommand(Arrays.asList(commandLine.split("\\s")));
-
-        return context;
-    }
 }

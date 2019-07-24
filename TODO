@@ -4,4 +4,5 @@ A refactor usages of "$HERE" against new global property map, command widget
 X finish mobile list functionality, including custom printer with special indicator for $ACTIVE mob
 X add "turn" command with following sub-commands: next, show, done (next advances $ACTIVE, show displays, done resets)
 * Add Integration Tests for interpreter menus
+* ensure "delete" is a synonyn for "remove" in all menus
 * REMOVE THIS TODO FILE!!!
