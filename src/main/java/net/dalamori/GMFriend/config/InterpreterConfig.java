@@ -194,6 +194,7 @@ public class InterpreterConfig {
         DeleteCommand<Creature> deleteCommand = new DeleteCommand<>();
         deleteCommand.setService(creatureService);
         creatureHandler.getMap().put("delete", deleteCommand);
+        creatureHandler.getMap().put("remove", deleteCommand);
 
         // CREATURE NEW
         CreateCommand<Creature> createCommand = new CreateCommand<Creature>() {
@@ -1098,6 +1099,7 @@ public class InterpreterConfig {
             }
         };
         varHandler.getMap().put("delete", delete);
+        varHandler.getMap().put("remove", delete);
 
         // VAR LIST
         DisplayCommand<Map<String,Property>> list = new DisplayCommand<Map<String, Property>>() {
