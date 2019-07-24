@@ -1,0 +1,6 @@
+v0.1.0 TODO:
+* Add users, permission levels
+* Update commands to consider privacy levels and permissions.
+* Add unit tests to cover permissions.
+* remove TODO
+
