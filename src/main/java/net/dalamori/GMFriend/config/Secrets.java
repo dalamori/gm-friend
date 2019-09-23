@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Data
 @Configuration
-@PropertySource("classpath:/secrets.properties")
+@PropertySource(value = "classpath:/secrets.properties", ignoreResourceNotFound = true)
 public class Secrets {
 
     @Value("${discord.token:DISCORD_TOKEN_NOT_SET_IN_SECRETS.PROPERTIES}")
