@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
+import net.dalamori.GMFriend.models.enums.UserRole;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Map;
 public class MapCommand extends AbstractCommand {
 
     private Map<String, AbstractCommand> map = new HashMap<>();
+    private Map<String, UserRole> role_required = new HashMap<>();
     private AbstractCommand defaultAction;
 
     @Override
@@ -22,6 +24,11 @@ public class MapCommand extends AbstractCommand {
 
         // try to follow map
         if (map.containsKey(commandPart)) {
+
+            if (role_required.containsKey(commandPart)) {
+
+            }
+
             context.setIndex(context.getIndex() + 1);
             map.get(commandPart).handle(context);
 
