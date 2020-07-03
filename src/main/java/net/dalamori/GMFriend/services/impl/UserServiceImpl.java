@@ -118,13 +118,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User forGame(String owner, String game) throws UserException {
+    public User forGame(String owner, String game) {
 
         List<String> games = new ArrayList<>();
         games.add(game);
         games.add(User.GLOBAL_GAME_ID);
 
-        Optional<User> result = userDao.findHighestAuth(owner, games);
+        Optional<User> result = userDao.findFirstByOwnerAndGameInOrderByRoleAsc(owner, games);
 
         if (result.isPresent()) {
             return result.get();

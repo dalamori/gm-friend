@@ -5,6 +5,7 @@ import net.dalamori.GMFriend.models.enums.UserRole;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -28,7 +29,7 @@ public class User {
     @Column(nullable = false, name = "OWNER")
     private String owner;
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false, name = "ROLE")
     @Enumerated(EnumType.ORDINAL)
     private UserRole role = UserRole.ROLE_STRANGER;

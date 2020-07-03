@@ -13,5 +13,5 @@ public interface UserService {
     void deleteAllByOwner(String owner);
     void deleteAllByGame(String game);
 
-    User forGame(String owner, String game) throws UserException;
+    User forGame(String owner, String game);
 }

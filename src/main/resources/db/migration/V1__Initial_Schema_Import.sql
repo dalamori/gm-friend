@@ -87,3 +87,14 @@ CREATE TABLE `mobiles` (
     UNIQUE KEY `name_unique` (`name`),
     INDEX `owner_idx` (`owner`)
 );
+
+CREATE TABLE `users` (
+    `id` INTEGER(20) NOT NULL AUTO_INCREMENT,
+    `owner` VARCHAR(255) NOT NULL,
+    `game` VARCHAR(255) NOT NULL,
+    `role` INTEGER NOT NULL,
+    PRIMARY KEY `primary` (`id`),
+    UNIQUE KEY `owner_game_unique` (`owner`, `game`),
+    INDEX `owner_idx` (`owner`),
+    INDEX `game_idx` (`game`)
+);
