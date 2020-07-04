@@ -7,18 +7,7 @@ import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.exceptions.NoteException;
 import net.dalamori.GMFriend.exceptions.PropertyException;
-import net.dalamori.GMFriend.interpreter.AbstractCommand;
-import net.dalamori.GMFriend.interpreter.AttachCommand;
-import net.dalamori.GMFriend.interpreter.CommandContext;
-import net.dalamori.GMFriend.interpreter.CreateCommand;
-import net.dalamori.GMFriend.interpreter.DeleteCommand;
-import net.dalamori.GMFriend.interpreter.DisplayCommand;
-import net.dalamori.GMFriend.interpreter.GlobalPropertySetCommand;
-import net.dalamori.GMFriend.interpreter.InfoCommand;
-import net.dalamori.GMFriend.interpreter.MapCommand;
-import net.dalamori.GMFriend.interpreter.PropertyDeleteCommand;
-import net.dalamori.GMFriend.interpreter.PropertySetCommand;
-import net.dalamori.GMFriend.interpreter.UpdateCommand;
+import net.dalamori.GMFriend.interpreter.*;
 import net.dalamori.GMFriend.interpreter.printer.PrettyPrinter;
 import net.dalamori.GMFriend.interpreter.printer.PrinterFactory;
 import net.dalamori.GMFriend.models.Creature;
@@ -29,6 +18,7 @@ import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.enums.UserRole;
 import net.dalamori.GMFriend.services.CreatureService;
 import net.dalamori.GMFriend.services.LocationService;
 import net.dalamori.GMFriend.services.MobileService;
@@ -93,7 +83,7 @@ public class InterpreterConfig {
     /* Root Command Menu (Unprefixed master) */
     private MapCommand unprefixedRoot() {
         MapCommand unprefixedRoot = new MapCommand();
-        Map<String, AbstractCommand> commandMap = unprefixedRoot.getMap();
+        Map<String, MapSubcommand> commandMap = unprefixedRoot.getMap();
         unprefixedRoot.setDefaultAction(DO_NOTHING);
 
         String bulletPrefix = config.getInterpreterPrinterBullet() + " " + config.getInterpreterCommandPrefix();
@@ -114,16 +104,16 @@ public class InterpreterConfig {
         help.setInfo(rootHelp);
 
         // Root-level Commands
-        commandMap.put("creature", creature());
-        commandMap.put("goto", locationMove());
-        commandMap.put("help", help);
-        commandMap.put("here", locationHere());
-        commandMap.put("location", location());
-        commandMap.put("mobile", mobile());
-        commandMap.put("note", note());
-        commandMap.put("ping", ping());
-        commandMap.put("turn", turn());
-        commandMap.put("var", var());
+        commandMap.put("creature", new MapSubcommand(UserRole.ROLE_STRANGER, "", creature()));
+        commandMap.put("goto", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationMove()));
+        commandMap.put("help", new MapSubcommand(UserRole.ROLE_STRANGER, "", help));
+        commandMap.put("here", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationHere()));
+        commandMap.put("location", new MapSubcommand(UserRole.ROLE_STRANGER, "", location()));
+        commandMap.put("mobile", new MapSubcommand(UserRole.ROLE_STRANGER, "", mobile()));
+        commandMap.put("note", new MapSubcommand(UserRole.ROLE_STRANGER, "", note()));
+        commandMap.put("ping", new MapSubcommand(UserRole.ROLE_STRANGER, "", ping()));
+        commandMap.put("turn", new MapSubcommand(UserRole.ROLE_STRANGER, "", turn()));
+        commandMap.put("var", new MapSubcommand(UserRole.ROLE_STRANGER, "", var()));
 
         // aliases
         commandMap.put("?", commandMap.get("help"));
@@ -146,10 +136,10 @@ public class InterpreterConfig {
             MapCommand root = new MapCommand();
 
             // copy all un-prefixed commands, and prefix them;
-            for (Map.Entry<String, AbstractCommand> entry : unprefixedRoot.getMap().entrySet()) {
+            for (Map.Entry<String, MapSubcommand> entry : unprefixedRoot.getMap().entrySet()) {
                 root.getMap().put(commandPrefix.concat(entry.getKey()), entry.getValue());
             }
-            root.getMap().put(commandPrefix, unprefixedRoot);
+            root.getMap().put(commandPrefix, new MapSubcommand(UserRole.ROLE_STRANGER, "", unprefixedRoot));
 
             // no-op command to absorb all non-actions
             root.setDefaultAction(DO_NOTHING);
@@ -194,8 +184,8 @@ public class InterpreterConfig {
         // CREATURE DELETE
         DeleteCommand<Creature> deleteCommand = new DeleteCommand<>();
         deleteCommand.setService(creatureService);
-        creatureHandler.getMap().put("delete", deleteCommand);
-        creatureHandler.getMap().put("remove", deleteCommand);
+        creatureHandler.getMap().put("delete", new MapSubcommand(UserRole.ROLE_STRANGER, "", deleteCommand));
+        creatureHandler.getMap().put("remove", creatureHandler.getMap().get("delete"));
 
         // CREATURE NEW
         CreateCommand<Creature> createCommand = new CreateCommand<Creature>() {
@@ -210,7 +200,7 @@ public class InterpreterConfig {
         };
         createCommand.setPrinter(printerFactory.getCreaturePrinter());
         createCommand.setService(creatureService);
-        creatureHandler.getMap().put("new", createCommand);
+        creatureHandler.getMap().put("new", new MapSubcommand(UserRole.ROLE_STRANGER, "", createCommand));
 
         // CREATURE SET
         PropertySetCommand<Creature> setCommand = new PropertySetCommand<>();
@@ -220,19 +210,19 @@ public class InterpreterConfig {
         setCommand.setLocationService(locationService);
         setCommand.setMobileService(mobileService);
         setCommand.setNoteService(noteService);
-        creatureHandler.getMap().put("set", setCommand);
+        creatureHandler.getMap().put("set", new MapSubcommand(UserRole.ROLE_STRANGER, "", setCommand));
 
         // CREATURE SHOW
         DisplayCommand<Creature> show = new DisplayCommand<>();
         show.setPrinter(printerFactory.getCreaturePrinter());
         show.setService(creatureService);
-        creatureHandler.getMap().put("show", show);
+        creatureHandler.getMap().put("show", new MapSubcommand(UserRole.ROLE_STRANGER, "", show));
 
         // CREATURE UNSET
         PropertyDeleteCommand<Creature> unsetCommand = new PropertyDeleteCommand<>();
         unsetCommand.setService(creatureService);
         unsetCommand.setPrinter(printerFactory.getCreaturePrinter());
-        creatureHandler.getMap().put("unset", unsetCommand);
+        creatureHandler.getMap().put("unset", new MapSubcommand(UserRole.ROLE_STRANGER, "", unsetCommand));
 
 
         return creatureHandler;
@@ -264,15 +254,15 @@ public class InterpreterConfig {
         locationHandler.setDefaultAction(locationInfo);
 
         // LOCATION HERE
-        locationHandler.getMap().put("here", locationHere());
+        locationHandler.getMap().put("here", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationHere()));
 
         // LOCATION LINK
-        locationHandler.getMap().put("link", locationLink());
+        locationHandler.getMap().put("link", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationLink()));
 
         // LOCATION MOVE
         AbstractCommand move = locationMove();
-        locationHandler.getMap().put("move", move);
-        locationHandler.getMap().put("go", move);
+        locationHandler.getMap().put("move", new MapSubcommand(UserRole.ROLE_STRANGER, "", move));
+        locationHandler.getMap().put("go", locationHandler.getMap().get("move"));
 
         // LOCATION NEW
         CreateCommand<Location> create = new CreateCommand<Location>() {
@@ -288,29 +278,29 @@ public class InterpreterConfig {
         };
         create.setPrinter(printerFactory.getLocationPrinter());
         create.setService(locationService);
-        locationHandler.getMap().put("new", create);
-        locationHandler.getMap().put("+", create);
+        locationHandler.getMap().put("new", new MapSubcommand(UserRole.ROLE_STRANGER, "", create));
+        locationHandler.getMap().put("+", locationHandler.getMap().get("new"));
 
         // LOCATION NOTE
-        locationHandler.getMap().put("note", locationNote());
+        locationHandler.getMap().put("note", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationNote()));
 
         // LOCATION REMOVE
         DeleteCommand<Location> remove = new DeleteCommand<>();
         remove.setService(locationService);
-        locationHandler.getMap().put("remove", remove);
-        locationHandler.getMap().put("delete", remove);
+        locationHandler.getMap().put("remove", new MapSubcommand(UserRole.ROLE_STRANGER, "", remove));
+        locationHandler.getMap().put("delete", locationHandler.getMap().get("remove"));
 
         // LOCATION SHOW
         DisplayCommand<Location> show = new DisplayCommand<>();
         show.setPrinter(printerFactory.getLocationPrinter());
         show.setService(locationService);
-        locationHandler.getMap().put("show", show);
+        locationHandler.getMap().put("show", new MapSubcommand(UserRole.ROLE_STRANGER, "", show));
 
         // LOCATION UN-LINK
-        locationHandler.getMap().put("unlink", locationRemoveLink());
+        locationHandler.getMap().put("unlink", new MapSubcommand(UserRole.ROLE_STRANGER, "", locationRemoveLink()));
 
         // LOCATION UN-NOTE
-        locationHandler.getMap().put("unnote", locationRemoveNote());
+        locationHandler.getMap().put("unnote", new MapSubcommand(UserRole.ROLE_STRANGER, "",locationRemoveNote()));
 
         return locationHandler;
     }
@@ -536,24 +526,24 @@ public class InterpreterConfig {
 
         // MOBILE HELP2
         mobileInfo2.setInfo(mobileHelp2);
-        mobileHandler.getMap().put("help2", mobileInfo2);
+        mobileHandler.getMap().put("help2", new MapSubcommand(UserRole.ROLE_STRANGER, "", mobileInfo2));
 
         // MOBILE BLANK
-        mobileHandler.getMap().put("blank", mobileBlank());
+        mobileHandler.getMap().put("blank", new MapSubcommand(UserRole.ROLE_STRANGER, "", mobileBlank()));
 
         // MOBILE DAMAGE
         AbstractCommand damage = mobileDamage();
-        mobileHandler.getMap().put("damage", damage);
-        mobileHandler.getMap().put("dmg", damage);
+        mobileHandler.getMap().put("damage", new MapSubcommand(UserRole.ROLE_STRANGER, "", damage));
+        mobileHandler.getMap().put("dmg", mobileHandler.getMap().get("damage"));
 
         // MOBILE DELETE
         DeleteCommand<Mobile> delete = new DeleteCommand<>();
         delete.setService(mobileService);
-        mobileHandler.getMap().put("delete", delete);
-        mobileHandler.getMap().put("remove", delete);
+        mobileHandler.getMap().put("delete", new MapSubcommand(UserRole.ROLE_STRANGER, "", delete));
+        mobileHandler.getMap().put("remove", mobileHandler.getMap().get("delete"));
 
         // MOBILE HEAL
-        mobileHandler.getMap().put("heal", mobileHeal());
+        mobileHandler.getMap().put("heal", new MapSubcommand(UserRole.ROLE_STRANGER, "", mobileHeal()));
 
         // MOBILE INIT
         UpdateCommand<Mobile> init = new UpdateCommand<Mobile>() {
@@ -570,7 +560,7 @@ public class InterpreterConfig {
         };
         init.setService(mobileService);
         init.setPrinter(printerFactory.getMobilePrinter());
-        mobileHandler.getMap().put("init", init);
+        mobileHandler.getMap().put("init", new MapSubcommand(UserRole.ROLE_STRANGER, "", init));
 
         // MOBILE KILL
         UpdateCommand<Mobile> kill = new UpdateCommand<Mobile>() {
@@ -583,7 +573,7 @@ public class InterpreterConfig {
         };
         kill.setService(mobileService);
         kill.setPrinter(printerFactory.getMobilePrinter());
-        mobileHandler.getMap().put("kill", kill);
+        mobileHandler.getMap().put("kill", new MapSubcommand(UserRole.ROLE_STRANGER, "", kill));
 
         // MOBILE LIST
         DisplayCommand<Iterable<Mobile>> list = new DisplayCommand<Iterable<Mobile>>(){
@@ -604,7 +594,7 @@ public class InterpreterConfig {
             }
         };
         list.setPrinter(printerFactory.getInitiativeListPrinter());
-        mobileHandler.getMap().put("list", list);
+        mobileHandler.getMap().put("list", new MapSubcommand(UserRole.ROLE_STRANGER, "", list));
 
         // MOBILE MAX HP
         UpdateCommand<Mobile> maxHp = new UpdateCommand<Mobile>() {
@@ -627,11 +617,11 @@ public class InterpreterConfig {
         };
         maxHp.setPrinter(printerFactory.getMobilePrinter());
         maxHp.setService(mobileService);
-        mobileHandler.getMap().put("maxHp", maxHp);
-        mobileHandler.getMap().put("maxhp", maxHp);
+        mobileHandler.getMap().put("maxHp", new MapSubcommand(UserRole.ROLE_STRANGER, "", maxHp));
+        mobileHandler.getMap().put("maxhp", mobileHandler.getMap().get("maxHp"));
 
         // MOBILE NEW
-        mobileHandler.getMap().put("new", mobileNew());
+        mobileHandler.getMap().put("new", new MapSubcommand(UserRole.ROLE_STRANGER, "", mobileNew()));
 
         // MOBILE POS;
         UpdateCommand<Mobile> move = new UpdateCommand<Mobile>() {
@@ -648,9 +638,9 @@ public class InterpreterConfig {
         };
         move.setService(mobileService);
         move.setPrinter(printerFactory.getMobilePrinter());
-        mobileHandler.getMap().put("pos", move);
-        mobileHandler.getMap().put("position", move);
-        mobileHandler.getMap().put("move", move);
+        mobileHandler.getMap().put("pos", new MapSubcommand(UserRole.ROLE_STRANGER, "", move));
+        mobileHandler.getMap().put("position", mobileHandler.getMap().get("pos"));
+        mobileHandler.getMap().put("move", mobileHandler.getMap().get("pos"));
 
         // MOBILE RESTORE
         UpdateCommand<Mobile> restore = new UpdateCommand<Mobile>() {
@@ -663,8 +653,8 @@ public class InterpreterConfig {
         };
         restore.setPrinter(printerFactory.getMobilePrinter());
         restore.setService(mobileService);
-        mobileHandler.getMap().put("res", restore);
-        mobileHandler.getMap().put("restore", restore);
+        mobileHandler.getMap().put("res", new MapSubcommand(UserRole.ROLE_STRANGER, "", restore));
+        mobileHandler.getMap().put("restore", mobileHandler.getMap().get("res"));
 
         // MOBILE SET
         PropertySetCommand<Mobile> propertySet = new PropertySetCommand<>();
@@ -674,19 +664,19 @@ public class InterpreterConfig {
         propertySet.setCreatureService(creatureService);
         propertySet.setService(mobileService);
         propertySet.setPrinter(printerFactory.getMobilePrinter());
-        mobileHandler.getMap().put("set", propertySet);
+        mobileHandler.getMap().put("set", new MapSubcommand(UserRole.ROLE_STRANGER, "", propertySet));
 
         // MOBILE SHOW
         DisplayCommand<Mobile> show = new DisplayCommand<>();
         show.setService(mobileService);
         show.setPrinter(printerFactory.getMobilePrinter());
-        mobileHandler.getMap().put("show", show);
+        mobileHandler.getMap().put("show", new MapSubcommand(UserRole.ROLE_STRANGER, "", show));
 
         // MOBILE UNSET
         PropertyDeleteCommand<Mobile> propertyUnset = new PropertyDeleteCommand<>();
         propertyUnset.setPrinter(printerFactory.getMobilePrinter());
         propertyUnset.setService(mobileService);
-        mobileHandler.getMap().put("unset", propertyUnset);
+        mobileHandler.getMap().put("unset", new MapSubcommand(UserRole.ROLE_STRANGER, "", propertyUnset));
 
         return mobileHandler;
     }
@@ -822,8 +812,8 @@ public class InterpreterConfig {
         };
         append.setPrinter(printerFactory.getNotePrinter());
         append.setService(noteService);
-        noteHandler.getMap().put("append", append);
-        noteHandler.getMap().put("++", append);
+        noteHandler.getMap().put("append", new MapSubcommand(UserRole.ROLE_STRANGER, "", append));
+        noteHandler.getMap().put("++", noteHandler.getMap().get("append"));
 
         // NOTE LIST
         DisplayCommand<Iterable<Note>> list = new DisplayCommand<Iterable<Note>>() {
@@ -833,7 +823,7 @@ public class InterpreterConfig {
             }
         };
         list.setPrinter(printerFactory.getNoteListPrinter());
-        noteHandler.getMap().put("list", list);
+        noteHandler.getMap().put("list", new MapSubcommand(UserRole.ROLE_STRANGER, "", list));
 
         // NOTE NEW
         CreateCommand<Note> create = new CreateCommand<Note>() {
@@ -855,14 +845,14 @@ public class InterpreterConfig {
         };
         create.setService(noteService);
         create.setPrinter(printerFactory.getNotePrinter());
-        noteHandler.getMap().put("new", create);
-        noteHandler.getMap().put("+", create);
+        noteHandler.getMap().put("new", new MapSubcommand(UserRole.ROLE_STRANGER, "", create));
+        noteHandler.getMap().put("+", noteHandler.getMap().get("new"));
 
         // NOTE REMOVE
         DeleteCommand<Note> remove = new DeleteCommand<>();
         remove.setService(noteService);
-        noteHandler.getMap().put("delete", remove);
-        noteHandler.getMap().put("remove", remove);
+        noteHandler.getMap().put("delete", new MapSubcommand(UserRole.ROLE_STRANGER, "", remove));
+        noteHandler.getMap().put("remove", noteHandler.getMap().get("delete"));
 
         // NOTE SET
         UpdateCommand<Note> set = new UpdateCommand<Note>() {
@@ -876,13 +866,13 @@ public class InterpreterConfig {
         };
         set.setPrinter(printerFactory.getNotePrinter());
         set.setService(noteService);
-        noteHandler.getMap().put("set", set);
+        noteHandler.getMap().put("set", new MapSubcommand(UserRole.ROLE_STRANGER, "", set));
 
         // NOTE SHOW
         DisplayCommand<Note> show = new DisplayCommand<>();
         show.setPrinter(printerFactory.getNotePrinter());
         show.setService(noteService);
-        noteHandler.getMap().put("show", show);
+        noteHandler.getMap().put("show", new MapSubcommand(UserRole.ROLE_STRANGER, "", show));
 
         // return
         return noteHandler;
@@ -936,13 +926,13 @@ public class InterpreterConfig {
                 }
             }
         };
-        turnHandler.getMap().put("done", done);
+        turnHandler.getMap().put("done", new MapSubcommand(UserRole.ROLE_STRANGER, "", done));
 
         // TURN NEXT
-        turnHandler.getMap().put("next", turnNext());
+        turnHandler.getMap().put("next", new MapSubcommand(UserRole.ROLE_STRANGER, "", turnNext()));
 
         // TURN SHOW
-        turnHandler.getMap().put("show", turnShow());
+        turnHandler.getMap().put("show", new MapSubcommand(UserRole.ROLE_STRANGER, "", turnShow()));
 
         return turnHandler;
     }
@@ -1099,8 +1089,8 @@ public class InterpreterConfig {
                 }
             }
         };
-        varHandler.getMap().put("delete", delete);
-        varHandler.getMap().put("remove", delete);
+        varHandler.getMap().put("delete", new MapSubcommand(UserRole.ROLE_STRANGER, "", delete));
+        varHandler.getMap().put("remove", varHandler.getMap().get("delete"));
 
         // VAR LIST
         DisplayCommand<Map<String,Property>> list = new DisplayCommand<Map<String, Property>>() {
@@ -1110,7 +1100,7 @@ public class InterpreterConfig {
             }
         };
         list.setPrinter(printerFactory.getPropertyMapPrinter());
-        varHandler.getMap().put("list", list);
+        varHandler.getMap().put("list", new MapSubcommand(UserRole.ROLE_STRANGER, "", list));
 
         // VAR SET
         GlobalPropertySetCommand set = new GlobalPropertySetCommand();
@@ -1120,7 +1110,7 @@ public class InterpreterConfig {
         set.setLocationService(locationService);
         set.setMobileService(mobileService);
         set.setNoteService(noteService);
-        varHandler.getMap().put("set", set);
+        varHandler.getMap().put("set", new MapSubcommand(UserRole.ROLE_STRANGER, "", set));
 
         return varHandler;
     }

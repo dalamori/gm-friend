@@ -124,7 +124,7 @@ public class UserServiceImpl implements UserService {
         games.add(game);
         games.add(User.GLOBAL_GAME_ID);
 
-        Optional<User> result = userDao.findFirstByOwnerAndGameInOrderByRoleAsc(owner, games);
+        Optional<User> result = userDao.findFirstByOwnerAndGameInOrderByRoleDesc(owner, games);
 
         if (result.isPresent()) {
             return result.get();

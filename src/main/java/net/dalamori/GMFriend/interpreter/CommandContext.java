@@ -1,6 +1,7 @@
 package net.dalamori.GMFriend.interpreter;
 
 import lombok.Data;
+import net.dalamori.GMFriend.models.enums.UserRole;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -20,6 +21,9 @@ public class CommandContext {
 
     @NotBlank
     private String owner;
+
+    @NotBlank
+    private UserRole role;
 
     @NotBlank
     private String response;

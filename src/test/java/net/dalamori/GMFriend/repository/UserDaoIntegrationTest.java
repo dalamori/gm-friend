@@ -1,6 +1,5 @@
 package net.dalamori.GMFriend.repository;
 
-import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
 import net.dalamori.GMFriend.models.User;
 import net.dalamori.GMFriend.models.enums.UserRole;
 import net.dalamori.GMFriend.testing.IntegrationTest;
@@ -92,7 +91,7 @@ public class UserDaoIntegrationTest {
         List<String> games = new ArrayList<>();
         games.add(GLOBAL_GAME);
         games.add(GAME_A);
-        Optional<User> findResultA = userDao.findFirstByOwnerAndGameInOrderByRoleAsc(OWNER_A, games);
+        Optional<User> findResultA = userDao.findFirstByOwnerAndGameInOrderByRoleDesc(OWNER_A, games);
 
         // then: I expect to see the Owner role from userA1
         Assert.assertTrue("should find a result", findResultA.isPresent());
@@ -100,7 +99,7 @@ public class UserDaoIntegrationTest {
         Assert.assertEquals("should be userA1", userA1.getId(), findResultA.get().getId());
 
         // and when: I look up owner B and game A
-        Optional<User> findResultB = userDao.findFirstByOwnerAndGameInOrderByRoleAsc(OWNER_B, games);
+        Optional<User> findResultB = userDao.findFirstByOwnerAndGameInOrderByRoleDesc(OWNER_B, games);
 
         // then: I expect to see the super user role from globalUserB
         Assert.assertTrue("should find a result", findResultB.isPresent());

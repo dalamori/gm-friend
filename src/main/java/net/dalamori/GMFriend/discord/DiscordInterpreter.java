@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.interpreter.AbstractCommand;
 import net.dalamori.GMFriend.interpreter.CommandContext;
+import net.dalamori.GMFriend.models.User;
+import net.dalamori.GMFriend.models.enums.UserRole;
+import net.dalamori.GMFriend.services.UserService;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +22,8 @@ public class DiscordInterpreter extends ListenerAdapter {
 
     private static final int MAX_DISCORD_MESSAGE_LENGTH = 1995;  // actually 2000, but I want a little room at the end.
 
-    AbstractCommand interpreter;
+    private AbstractCommand interpreter;
+    private UserService userService;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -46,6 +50,13 @@ public class DiscordInterpreter extends ListenerAdapter {
         context.setOwner(owner);
 
         context.setCommand(Arrays.asList(rawCommand.split("\\s+")));
+
+        if (userService != null) {
+            User user = userService.forGame(owner, User.GLOBAL_GAME_ID);
+            context.setRole(user.getRole());
+        } else {
+            context.setRole(UserRole.ROLE_STRANGER);
+        }
 
         context.setIndex(0);
         try {

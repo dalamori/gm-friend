@@ -18,5 +18,5 @@ public interface UserDao extends CrudRepository<User, Long> {
     int deleteAllByGame(String game);
     int deleteAllByOwner(String owner);
 
-    Optional<User> findFirstByOwnerAndGameInOrderByRoleAsc(String owner, List<String> games);
+    Optional<User> findFirstByOwnerAndGameInOrderByRoleDesc(String owner, List<String> games);
 }

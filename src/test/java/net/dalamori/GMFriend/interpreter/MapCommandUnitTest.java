@@ -1,6 +1,7 @@
 package net.dalamori.GMFriend.interpreter;
 
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
+import net.dalamori.GMFriend.models.enums.UserRole;
 import net.dalamori.GMFriend.testing.UnitTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,8 +41,8 @@ public class MapCommandUnitTest {
         defaultTarget.setInfo("defaultTarget");
 
         command = new MapCommand();
-        command.getMap().put("dolor", target1);
-        command.getMap().put("ipsum", target2);
+        command.getMap().put("dolor", new MapSubcommand(UserRole.ROLE_STRANGER, "", target1));
+        command.getMap().put("ipsum", new MapSubcommand(UserRole.ROLE_STRANGER, "", target2));
         command.setDefaultAction(defaultTarget);
 
         context = new CommandContext();
