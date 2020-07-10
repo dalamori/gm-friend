@@ -1,6 +1,5 @@
 package net.dalamori.GMFriend.config;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.DmFriendGeneralServiceException;
@@ -19,18 +18,12 @@ import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
 import net.dalamori.GMFriend.models.enums.UserRole;
-import net.dalamori.GMFriend.services.CreatureService;
-import net.dalamori.GMFriend.services.LocationService;
-import net.dalamori.GMFriend.services.MobileService;
-import net.dalamori.GMFriend.services.NoteService;
-import net.dalamori.GMFriend.services.PropertyService;
+import net.dalamori.GMFriend.services.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.sound.sampled.Line;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +50,9 @@ public class InterpreterConfig {
 
     @Autowired
     private PropertyService propertyService;
+
+    @Autowired
+    private UserService userService;
 
     private AbstractCommand rootCommand;
     private PrinterFactory printerFactory;
@@ -98,6 +94,7 @@ public class InterpreterConfig {
                 bulletPrefix + "note [...] - Note commands; see \"note help\" for more info\n" +
                 bulletPrefix + "room [...] - Location commands; see \"location help\" for more info\n" +
                 bulletPrefix + "turn [...] - turn commands; manipulates $ACTIVE; see \"turn help\" for more info\n" +
+                bulletPrefix + "user [...] - user commands; manipulates users\n" +
                 bulletPrefix + "var [...] - global variable commands; see \"var help\" for more info\n" +
                 "\n\r";
         InfoCommand help = new InfoCommand();
@@ -113,6 +110,7 @@ public class InterpreterConfig {
         commandMap.put("note", new MapSubcommand(UserRole.ROLE_STRANGER, "", note()));
         commandMap.put("ping", new MapSubcommand(UserRole.ROLE_STRANGER, "", ping()));
         commandMap.put("turn", new MapSubcommand(UserRole.ROLE_STRANGER, "", turn()));
+        commandMap.put("user", new MapSubcommand(UserRole.ROLE_ASSISTANT, "", user()));
         commandMap.put("var", new MapSubcommand(UserRole.ROLE_STRANGER, "", var()));
 
         // aliases
@@ -1113,5 +1111,33 @@ public class InterpreterConfig {
         varHandler.getMap().put("set", new MapSubcommand(UserRole.ROLE_STRANGER, "", set));
 
         return varHandler;
+    }
+
+
+    private AbstractCommand user() {
+        MapCommand userHandler = new MapCommand();
+        AbstractCommand userInfo = userHandler.getAutoHelpCommand();
+
+        UserGrantCommand grant = new UserGrantCommand();
+        grant.setUserService(userService);
+        userHandler.getMap().put("grant", new MapSubcommand(UserRole.ROLE_ASSISTANT, "[USER] [ROLE] [GAME(Optional)] - Sets a user to the given role", grant));
+
+        UserRevokeCommand revoke = new UserRevokeCommand();
+        revoke.setUserService(userService);
+        userHandler.getMap().put("revoke", new MapSubcommand(UserRole.ROLE_GAME_MASTER, "[USER] [GAME(Optional)] - removes a user", revoke));
+
+        userHandler.setDefaultAction(userInfo);
+
+        /* aliases
+        userHandler.getMap().put("add", userHandler.getMap().get("grant"));
+        userHandler.getMap().put("give", userHandler.getMap().get("grant"));
+        userHandler.getMap().put("set", userHandler.getMap().get("grant"));
+
+        userHandler.getMap().put("ban", userHandler.getMap().get("revoke"));
+        userHandler.getMap().put("rm", userHandler.getMap().get("revoke"));
+        userHandler.getMap().put("remove", userHandler.getMap().get("revoke"));
+        */
+
+        return userHandler;
     }
 }

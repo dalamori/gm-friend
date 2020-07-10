@@ -1,0 +1,1 @@
+INSERT INTO `users` (owner, game, role) VALUES ("dalamori#7583", "GLOBAL_GAME_MAGIC_3945c255-55c4-4256-92f2-114136e6a651", 7);

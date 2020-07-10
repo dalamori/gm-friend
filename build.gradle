@@ -63,3 +63,7 @@ flyway {
 test {
 	systemProperty "spring.datasource.url", "jdbc:mysql://localhost:3306/dm_friend_test"
 }
+
+bootRun {
+    systemProperties System.properties
+}

@@ -45,6 +45,15 @@ public class MapCommand extends AbstractCommand {
         tryDefault(context);
     }
 
+    public AbstractCommand getAutoHelpCommand() {
+        return new AbstractCommand() {
+            @Override
+            public void handle(CommandContext context) throws InterpreterException {
+                context.setResponse(autoHelp(context));
+            }
+        };
+    }
+
     public String autoHelp(CommandContext context) {
         String commandPrefix = String.join(" ", context.getCommand().subList(0, context.getIndex()));
         StringBuilder builder = new StringBuilder();

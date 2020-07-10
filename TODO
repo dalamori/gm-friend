@@ -1,6 +1,7 @@
 v0.1.0 TODO:
 * Add users
 * Add permission levels
+** Handle cross-game escalation
 * Update commands to consider privacy levels and permissions.
 * Add unit tests to cover permissions.
 * remove TODO
