@@ -7,7 +7,7 @@ import net.dalamori.GMFriend.models.enums.UserRole;
 @Data
 @AllArgsConstructor
 public class MapSubcommand {
-    private UserRole requiresRole;
+    private UserRole requiredRole;
     private String helpHint;
     private AbstractCommand command;
 }

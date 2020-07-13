@@ -1121,14 +1121,16 @@ public class InterpreterConfig {
         UserGrantCommand grant = new UserGrantCommand();
         grant.setUserService(userService);
         userHandler.getMap().put("grant", new MapSubcommand(UserRole.ROLE_ASSISTANT, "[USER] [ROLE] [GAME(Optional)] - Sets a user to the given role", grant));
+        userHandler.getHelpKeys().add("grant");
 
         UserRevokeCommand revoke = new UserRevokeCommand();
         revoke.setUserService(userService);
         userHandler.getMap().put("revoke", new MapSubcommand(UserRole.ROLE_GAME_MASTER, "[USER] [GAME(Optional)] - removes a user", revoke));
+        userHandler.getHelpKeys().add("revoke");
 
         userHandler.setDefaultAction(userInfo);
 
-        /* aliases
+        // aliases
         userHandler.getMap().put("add", userHandler.getMap().get("grant"));
         userHandler.getMap().put("give", userHandler.getMap().get("grant"));
         userHandler.getMap().put("set", userHandler.getMap().get("grant"));
@@ -1136,7 +1138,6 @@ public class InterpreterConfig {
         userHandler.getMap().put("ban", userHandler.getMap().get("revoke"));
         userHandler.getMap().put("rm", userHandler.getMap().get("revoke"));
         userHandler.getMap().put("remove", userHandler.getMap().get("revoke"));
-        */
 
         return userHandler;
     }

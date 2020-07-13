@@ -10,6 +10,7 @@ import net.dalamori.GMFriend.models.Note;
 import net.dalamori.GMFriend.models.Property;
 import net.dalamori.GMFriend.models.enums.PrivacyType;
 import net.dalamori.GMFriend.models.enums.PropertyType;
+import net.dalamori.GMFriend.models.enums.UserRole;
 
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ public class TestDataFactory {
         context.setOwner(OWNER_NAME);
         context.setIndex(0);
         context.setCommand(Arrays.asList(commandLine.split("\\s")));
+        context.setRole(UserRole.ROLE_STRANGER);
 
         return context;
     }

@@ -6,9 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dalamori.GMFriend.exceptions.InterpreterException;
 import net.dalamori.GMFriend.models.enums.UserRole;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Slf4j
@@ -16,6 +14,7 @@ import java.util.Map;
 public class MapCommand extends AbstractCommand {
 
     private Map<String, MapSubcommand> map = new HashMap<>();
+    private Set<String> helpKeys = new HashSet<>();
     private AbstractCommand defaultAction;
 
     @Override
@@ -24,17 +23,10 @@ public class MapCommand extends AbstractCommand {
 
         // try to follow map
         if (map.containsKey(commandPart)) {
-
-            /*
-            if (roleRequired.containsKey(commandPart)) {
-                UserRole required = roleRequired.get(commandPart);
-
-                // higher role
-                if (context.getRole().compareTo(required) < 0) {
-                    throw new InterpreterException("MapCommand::handle permission denied");
-                }
+            UserRole roleRequired = map.get(commandPart).getRequiredRole();
+            if (context.getRole().compareTo(roleRequired) < 0) {
+                throw new InterpreterException("MapCommand::handle - Permission denied");
             }
-            */
 
             context.setIndex(context.getIndex() + 1);
             map.get(commandPart).getCommand().handle(context);
@@ -62,7 +54,11 @@ public class MapCommand extends AbstractCommand {
         while (iterator.hasNext()) {
             Map.Entry<String, MapSubcommand> entry = iterator.next();
 
-            if (entry.getValue().getRequiresRole() != null && context.getRole().compareTo(entry.getValue().getRequiresRole()) < 0) {
+            if (!this.helpKeys.contains(entry.getKey())) {
+                continue;
+            }
+
+            if (entry.getValue().getRequiredRole() != null && context.getRole().compareTo(entry.getValue().getRequiredRole()) < 0) {
                 continue;
             }
 

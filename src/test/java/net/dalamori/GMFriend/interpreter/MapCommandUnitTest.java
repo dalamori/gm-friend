@@ -46,6 +46,7 @@ public class MapCommandUnitTest {
         command.setDefaultAction(defaultTarget);
 
         context = new CommandContext();
+        context.setRole(UserRole.ROLE_STRANGER);
     }
 
     @Test
